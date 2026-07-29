@@ -31,10 +31,12 @@ better for roles that emphasise evaluation or work under regulatory scrutiny.
 
 **Efficiency-led — for resource-constrained or startup roles**
 
-> Measured the data-efficiency curve of QLoRA fine-tuning: **200 training
-> examples and 102 seconds of GPU time captured 79% of the total achievable
-> accuracy gain**, while 30× the data and 66× the training time bought only 9.4
-> further points — a 249× worse marginal return per second of compute.
+> Measured the data-efficiency curve of QLoRA fine-tuning at three scales,
+> all trained for the same 2 epochs so data size was the only variable: 200
+> examples (12 minutes of training) captured **82% of the total achievable
+> accuracy gain**, 1,000 examples captured 92%, and the full 6,000-example
+> run bought only the last 8% for nearly 10× the training time of the 200
+> example run.
 
 **Engineering-detail bullet — pairs well with any of the above**
 
@@ -80,16 +82,17 @@ claim a delta.
   double-quoted identifier silently becomes a string literal instead of
   raising an error, which would have reported 100% validity for entirely wrong
   queries.
-- **Trained at two data scales** rather than one, turning a before/after into
-  a data-efficiency curve.
+- **Trained at three data scales, all at the same epoch count**, rather than
+  a single before/after point or an epoch-confounded pair, turning the result
+  into a real diminishing-returns curve.
 
 **Result.** Execution accuracy **39.8% → 85.4%** (+45.6 points); syntactic
 validity 55.2% → 99.8%; `sql_error` failures 219 → 0. Significant under a
 paired McNemar test (238 fixed, 10 broken, χ² = 207.8, p < 1e-15), with 0
 table overlap between train and eval. Accuracy *conditional on the query
 executing* also rose (72.1% → 85.6%), so the gain was not merely queries
-becoming runnable. The unexpected finding: 200 examples and 102 seconds
-captured 79% of the total gain.
+becoming runnable. The unexpected finding: 200 examples and 12 minutes of
+training captured 82% of the total gain; 1,000 examples captured 92%.
 
 ---
 
@@ -123,13 +126,14 @@ I'd rather show a constraint handled honestly than claim a setup I didn't
 have. The methodology transfers directly to a larger model on better hardware.
 
 **"What would you do differently?"**
-Three things. The data-efficiency curve has only two points and an epoch
-confound — n=200 ran 1 epoch and n=6,000 ran 2, so that row varies data and
-epochs together; a clean 2-epoch n=200 and an n=1,000 point would locate the
-knee properly and cost about 25 minutes. I'd add a held-out dev-set evaluation
-during training rather than only a 3-example smoke test. And WikiSQL is
-single-table, so the obvious next step is Spider, where joins make the task
-genuinely harder.
+Two things remain open. I'd add a held-out dev-set evaluation during training
+rather than only a 3-example smoke test. And WikiSQL is single-table, so the
+obvious next step is Spider, where joins make the task genuinely harder. A
+third thing I already went back and fixed: the data-efficiency curve
+originally had only two points and an epoch confound, since n=200 ran 1
+epoch while n=6,000 ran 2. I re-ran n=200 at 2 epochs and added an n=1,000
+point — the share of total gain moved from 79% to 82% at n=200, with 92% at
+n=1,000, confirming the direction but correcting the exact number.
 
 **"What broke, and what did you do about it?"**
 The most instructive one: my own scoring harness. Testing it against

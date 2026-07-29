@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-29T11:33:45Z",
+  "generated_at_utc": "2026-07-29T20:44:43Z",
   "eval_records": 500,
   "note": "Epochs held constant while training-set size varies, so optimiser steps scale with data. Data quantity and training duration are confounded by design; this mirrors the practical decision.",
   "points": [
@@ -17,15 +17,28 @@
     {
       "n_train_examples": 200,
       "label": "QLoRA, 200 examples",
-      "execution_accuracy": 0.76,
+      "execution_accuracy": 0.772,
       "syntactic_validity_rate": 0.98,
-      "exact_match_accuracy": 0.606,
-      "train_runtime_seconds": 102.2,
+      "exact_match_accuracy": 0.684,
+      "train_runtime_seconds": 694.4,
       "peak_vram_gib": 2.598,
-      "optimizer_steps": null,
-      "final_train_loss": 0.11460019304202153,
-      "gain_over_baseline_pts": 36.2,
-      "share_of_best_gain": 0.794
+      "optimizer_steps": 25,
+      "final_train_loss": 0.07422455256948104,
+      "gain_over_baseline_pts": 37.4,
+      "share_of_best_gain": 0.82
+    },
+    {
+      "n_train_examples": 1000,
+      "label": "QLoRA, 1,000 examples",
+      "execution_accuracy": 0.818,
+      "syntactic_validity_rate": 0.994,
+      "exact_match_accuracy": 0.74,
+      "train_runtime_seconds": 2980.5,
+      "peak_vram_gib": 2.613,
+      "optimizer_steps": 125,
+      "final_train_loss": 0.04755085446531811,
+      "gain_over_baseline_pts": 42.0,
+      "share_of_best_gain": 0.921
     },
     {
       "n_train_examples": 6000,

@@ -587,17 +587,17 @@ decision (D-002 era) was meant to avoid.
   version that nothing reads is worse than no pin, because it looks like a
   guarantee.
 
+- **P-005 — Close the O-001 epoch confound.** **Done.** Re-ran n=200 at 2
+  epochs (was 1) via `run_scaling_study.py --sizes 200 1000`, and added an
+  n=1,000 point that did not exist before, locating the knee rather than
+  interpolating it. Corrected curve: n=200 now captures 82% of the total
+  gain (previously reported as 79% under the mismatched epoch count),
+  n=1,000 captures 92%, n=6,000 captures 100%. The direction did not change;
+  the exact share did, which is exactly the risk O-001 flagged.
+
 ---
 
 ## Open — deliberately not done
-
-- **O-001 — The data-efficiency curve has two points and an epoch confound.**
-  n=200 ran 1 epoch, n=6,000 ran 2, so that row varies data and epochs
-  together. The direction is not in doubt (36.2 of 45.6 points from 1.5% of
-  the training time), but the exact 79% share would shift under a clean
-  2-epoch run. `run_scaling_study.py --sizes 200 1000` closes it in ~25
-  minutes and would locate the knee, which is currently interpolated.
-  Recorded as a limitation in the README rather than quietly omitted.
 
 - **O-002 — No dev-set evaluation during training.** Phase 3's gate is a
   3-example smoke test, which is too small to detect overfitting. Two epochs
