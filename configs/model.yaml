@@ -1,0 +1,41 @@
+# Shared model + quantisation config.
+#
+# This file is the single source of truth for the model and its 4-bit
+# quantisation settings. Phase 0 (env verification), Phase 2 (baseline eval),
+# Phase 3 (QLoRA training) and Phase 4 (post-fine-tune eval) all read it, so
+# the base model is provably identical across the before/after comparison.
+# Changing the model here changes it everywhere, which is the point: it makes
+# an accidental "compared two different models" mistake impossible.
+
+model:
+  # Primary target. Fallback to Qwen/Qwen2.5-0.5B-Instruct is a documented
+  # Phase 0 decision, not a silent swap -- see docs/DECISIONS.md.
+  id: Qwen/Qwen2.5-1.5B-Instruct
+  fallback_id: Qwen/Qwen2.5-0.5B-Instruct
+  # Pinned to an immutable commit rather than `main`, so the base model cannot
+  # change between the baseline and post-fine-tuning runs -- a drifting base
+  # would silently invalidate the whole before/after comparison.
+  # The repo's last modification is 2024-09-25, well before this project's
+  # runs, so this SHA is the revision those runs actually used.
+  revision: 989aa7980e4cf806f80c7fef2b1adb7bc71aa306
+  trust_remote_code: false  # Qwen2.5 is natively supported; no remote code needed
+
+quantization:
+  # QLoRA recipe (Dettmers et al., 2023): 4-bit NF4 base weights, double
+  # quantisation for the quantisation constants, bf16 compute.
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  # bf16 requires compute capability >= 8.0. RTX 3050 Laptop is Ampere
+  # (sm_86), so bf16 is available. The verify script detects this rather
+  # than assuming it, and falls back to fp16 on older cards.
+  bnb_4bit_compute_dtype: bfloat16
+
+runtime:
+  # Pin every module to GPU 0. Deliberately NOT device_map="auto":
+  # "auto" would silently spill layers to CPU RAM when VRAM runs short,
+  # which would make a Phase 0 OOM look like a pass. Forcing {"": 0} means
+  # the fit check either genuinely fits in 4 GB or raises OOM.
+  device_map: {"": 0}
+  attn_implementation: sdpa   # flash-attn2 has no prebuilt Windows wheel
+  max_seq_length: 512         # single-table WikiSQL schemas keep prompts short

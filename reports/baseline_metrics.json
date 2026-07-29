@@ -1,0 +1,79 @@
+{
+  "name": "baseline",
+  "generated_at_utc": "2026-07-28T22:00:22Z",
+  "adapter": null,
+  "model": null,
+  "eval_records": "data\\processed\\test_eval.jsonl",
+  "n_records": 500,
+  "decoding": {
+    "strategy": "greedy",
+    "max_new_tokens": 128
+  },
+  "generation_seconds": 414.5,
+  "metrics": {
+    "n": 500,
+    "execution_accuracy": 0.398,
+    "syntactic_validity_rate": 0.552,
+    "exact_match_accuracy": 0.034,
+    "sql_extraction_rate": 1.0,
+    "counts": {
+      "execution_match": 199,
+      "executed": 276,
+      "exact_match": 17,
+      "sql_extracted": 500
+    },
+    "failure_breakdown": {
+      "sql_error": 219,
+      "wrong_result": 77,
+      "unknown_identifier": 5
+    },
+    "by_condition_count": {
+      "0": {
+        "n": 2,
+        "execution_accuracy": 1.0
+      },
+      "1": {
+        "n": 368,
+        "execution_accuracy": 0.4185
+      },
+      "2": {
+        "n": 110,
+        "execution_accuracy": 0.3455
+      },
+      "3": {
+        "n": 15,
+        "execution_accuracy": 0.3333
+      },
+      "4": {
+        "n": 5,
+        "execution_accuracy": 0.0
+      }
+    },
+    "by_agg_index": {
+      "0": {
+        "n": 376,
+        "execution_accuracy": 0.4016
+      },
+      "1": {
+        "n": 25,
+        "execution_accuracy": 0.24
+      },
+      "2": {
+        "n": 25,
+        "execution_accuracy": 0.72
+      },
+      "3": {
+        "n": 52,
+        "execution_accuracy": 0.2115
+      },
+      "4": {
+        "n": 7,
+        "execution_accuracy": 0.7143
+      },
+      "5": {
+        "n": 15,
+        "execution_accuracy": 0.5333
+      }
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "phase": 1,
+  "purpose": "Materialise WikiSQL into executable SQLite and validate ground truth",
+  "generated_at_utc": "2026-07-28T21:52:37Z",
+  "overall_result": "PASS",
+  "seed": 20260728,
+  "source_url": "https://github.com/salesforce/WikiSQL/raw/master/data.tar.bz2",
+  "split_sizes": {
+    "train": 56355,
+    "dev": 8421,
+    "test": 15878
+  },
+  "materialisation": {
+    "train": {
+      "split": "train",
+      "tables_written": 18582,
+      "rows_written": 317742,
+      "tables_skipped_colliding_headers": 3,
+      "skipped_table_ids": [
+        "1-18250180-4",
+        "1-23206812-1",
+        "2-18250180-4"
+      ],
+      "database_path": "C:\\Projects\\lora-text-to-sql\\data\\tables\\train.db",
+      "database_mib": 83.39,
+      "orphaned_examples": 0
+    },
+    "dev": {
+      "split": "dev",
+      "tables_written": 2716,
+      "rows_written": 44761,
+      "tables_skipped_colliding_headers": 0,
+      "skipped_table_ids": [],
+      "database_path": "C:\\Projects\\lora-text-to-sql\\data\\tables\\dev.db",
+      "database_mib": 12.01
+    },
+    "test": {
+      "split": "test",
+      "tables_written": 5229,
+      "rows_written": 96278,
+      "tables_skipped_colliding_headers": 1,
+      "skipped_table_ids": [
+        "1-24074449-1"
+      ],
+      "database_path": "C:\\Projects\\lora-text-to-sql\\data\\tables\\test.db",
+      "database_mib": 23.91,
+      "orphaned_examples": 0
+    }
+  },
+  "ground_truth_validation": {
+    "train": {
+      "sampled": 2000,
+      "usable": 1833,
+      "degenerate": 167,
+      "error": 0,
+      "usable_rate": 0.9165,
+      "execution_error_rate": 0.0,
+      "error_examples": []
+    },
+    "dev": {
+      "sampled": 2000,
+      "usable": 1842,
+      "degenerate": 158,
+      "error": 0,
+      "usable_rate": 0.921,
+      "execution_error_rate": 0.0,
+      "error_examples": []
+    },
+    "test": {
+      "sampled": 2000,
+      "usable": 1850,
+      "degenerate": 150,
+      "error": 0,
+      "usable_rate": 0.925,
+      "execution_error_rate": 0.0,
+      "error_examples": []
+    }
+  },
+  "train_subsample": {
+    "size": 6000,
+    "path": "data\\processed\\train_subsample.jsonl",
+    "max_stratum_drift_vs_full_split": 0.0001
+  },
+  "evaluation_set": {
+    "size": 500,
+    "path": "data\\processed\\test_eval.jsonl",
+    "candidates_inspected": 550,
+    "selection_rule": "ground-truth SQL must return a non-degenerate result"
+  }
+}

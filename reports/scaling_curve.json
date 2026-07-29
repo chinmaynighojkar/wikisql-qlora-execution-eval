@@ -1,0 +1,44 @@
+{
+  "generated_at_utc": "2026-07-29T11:33:45Z",
+  "eval_records": 500,
+  "note": "Epochs held constant while training-set size varies, so optimiser steps scale with data. Data quantity and training duration are confounded by design; this mirrors the practical decision.",
+  "points": [
+    {
+      "n_train_examples": 0,
+      "label": "base model (no fine-tuning)",
+      "execution_accuracy": 0.398,
+      "syntactic_validity_rate": 0.552,
+      "exact_match_accuracy": 0.034,
+      "train_runtime_seconds": 0.0,
+      "peak_vram_gib": null,
+      "gain_over_baseline_pts": 0.0,
+      "share_of_best_gain": 0.0
+    },
+    {
+      "n_train_examples": 200,
+      "label": "QLoRA, 200 examples",
+      "execution_accuracy": 0.76,
+      "syntactic_validity_rate": 0.98,
+      "exact_match_accuracy": 0.606,
+      "train_runtime_seconds": 102.2,
+      "peak_vram_gib": 2.598,
+      "optimizer_steps": null,
+      "final_train_loss": 0.11460019304202153,
+      "gain_over_baseline_pts": 36.2,
+      "share_of_best_gain": 0.794
+    },
+    {
+      "n_train_examples": 6000,
+      "label": "QLoRA, 6,000 examples",
+      "execution_accuracy": 0.854,
+      "syntactic_validity_rate": 0.998,
+      "exact_match_accuracy": 0.778,
+      "train_runtime_seconds": 6711.3,
+      "peak_vram_gib": 2.628,
+      "optimizer_steps": 750,
+      "final_train_loss": 0.028441683014233908,
+      "gain_over_baseline_pts": 45.6,
+      "share_of_best_gain": 1.0
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+# QLoRA training configuration (Phase 3).
+#
+# Split from model.yaml so the base model and quantisation settings -- which
+# MUST be identical between the Phase 2 baseline and the Phase 4 fine-tuned
+# run -- cannot be edited by accident while tuning hyperparameters.
+#
+# The memory settings below are sized for the measured budget on the target
+# machine: 4.0 GiB total VRAM, of which ~3.2 GiB is actually free once the
+# CUDA context and the Windows desktop compositor are accounted for. If the
+# Phase 0 `--train-probe` peak leaves too little headroom, reduce in this
+# order (cheapest first) -- see docs/SETUP.md, Fallback C:
+#   1. lora.r 16 -> 8
+#   2. drop the MLP projections from lora.target_modules
+#   3. training.max_length 512 -> 384
+#   4. fall back to Qwen2.5-0.5B-Instruct in model.yaml
+
+lora:
+  r: 16
+  lora_alpha: 32          # conventional 2x rank
+  lora_dropout: 0.05
+  bias: none              # training biases adds parameters for negligible gain
+  task_type: CAUSAL_LM
+  # Attention *and* MLP projections. The QLoRA paper finds adapting all linear
+  # layers matters more than a high rank on a few, which is the better trade
+  # when VRAM is the binding constraint rather than parameter count.
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+training:
+  num_train_epochs: 2
+  # Batch 1 is forced by the VRAM budget; accumulation restores an effective
+  # batch of 16 so gradient estimates are not hopelessly noisy.
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  # Trades compute for memory by recomputing activations in the backward pass
+  # instead of storing them. Roughly 30% slower, and not optional here.
+  gradient_checkpointing: true
+  # Paged 8-bit AdamW keeps optimiser state small and lets it spill to host
+  # RAM under pressure rather than raising OOM mid-run.
+  optim: paged_adamw_8bit
+  learning_rate: 0.0002
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  max_grad_norm: 0.3
+  weight_decay: 0.0
+  # Single-table WikiSQL schemas are short; 512 covers the prompt plus the
+  # generated SQL with room to spare. Verified in Phase 3 before training.
+  max_length: 512
+  logging_steps: 10
+  save_strategy: "no"     # the adapter is saved once, explicitly, at the end
+  seed: 20260728
+  # Packing concatenates short examples to fill the context window. Disabled:
+  # it would let one example's SQL condition the next, and with completion-only
+  # loss the accounting becomes much harder to reason about. Throughput is not
+  # the constraint worth optimising here -- correctness of the comparison is.
+  packing: false
+
+evaluation:
+  # Held-out examples used for the Phase 3 smoke test (the gate is "valid SQL
+  # on 3 held-out examples"). Drawn from the dev split, never from train, and
+  # never from the Phase 2/4 test set.
+  smoke_test_size: 3

@@ -1,0 +1,277 @@
+{
+  "generated_from": {
+    "baseline": "baseline_metrics.json",
+    "finetuned": "finetuned_metrics.json"
+  },
+  "n_records": 500,
+  "baseline": {
+    "name": "baseline",
+    "generated_at_utc": "2026-07-28T22:00:22Z",
+    "adapter": null,
+    "model": null,
+    "eval_records": "data\\processed\\test_eval.jsonl",
+    "n_records": 500,
+    "decoding": {
+      "strategy": "greedy",
+      "max_new_tokens": 128
+    },
+    "generation_seconds": 414.5,
+    "metrics": {
+      "n": 500,
+      "execution_accuracy": 0.398,
+      "syntactic_validity_rate": 0.552,
+      "exact_match_accuracy": 0.034,
+      "sql_extraction_rate": 1.0,
+      "counts": {
+        "execution_match": 199,
+        "executed": 276,
+        "exact_match": 17,
+        "sql_extracted": 500
+      },
+      "failure_breakdown": {
+        "sql_error": 219,
+        "wrong_result": 77,
+        "unknown_identifier": 5
+      },
+      "by_condition_count": {
+        "0": {
+          "n": 2,
+          "execution_accuracy": 1.0
+        },
+        "1": {
+          "n": 368,
+          "execution_accuracy": 0.4185
+        },
+        "2": {
+          "n": 110,
+          "execution_accuracy": 0.3455
+        },
+        "3": {
+          "n": 15,
+          "execution_accuracy": 0.3333
+        },
+        "4": {
+          "n": 5,
+          "execution_accuracy": 0.0
+        }
+      },
+      "by_agg_index": {
+        "0": {
+          "n": 376,
+          "execution_accuracy": 0.4016
+        },
+        "1": {
+          "n": 25,
+          "execution_accuracy": 0.24
+        },
+        "2": {
+          "n": 25,
+          "execution_accuracy": 0.72
+        },
+        "3": {
+          "n": 52,
+          "execution_accuracy": 0.2115
+        },
+        "4": {
+          "n": 7,
+          "execution_accuracy": 0.7143
+        },
+        "5": {
+          "n": 15,
+          "execution_accuracy": 0.5333
+        }
+      }
+    }
+  },
+  "finetuned": {
+    "name": "finetuned",
+    "generated_at_utc": "2026-07-29T11:27:49Z",
+    "adapter": "models\\lora-adapter",
+    "model": null,
+    "eval_records": "data\\processed\\test_eval.jsonl",
+    "n_records": 500,
+    "decoding": {
+      "strategy": "greedy",
+      "max_new_tokens": 128
+    },
+    "generation_seconds": 302.1,
+    "metrics": {
+      "n": 500,
+      "execution_accuracy": 0.854,
+      "syntactic_validity_rate": 0.998,
+      "exact_match_accuracy": 0.778,
+      "sql_extraction_rate": 1.0,
+      "counts": {
+        "execution_match": 427,
+        "executed": 499,
+        "exact_match": 389,
+        "sql_extracted": 500
+      },
+      "failure_breakdown": {
+        "wrong_result": 72,
+        "unknown_identifier": 1
+      },
+      "by_condition_count": {
+        "0": {
+          "n": 2,
+          "execution_accuracy": 1.0
+        },
+        "1": {
+          "n": 368,
+          "execution_accuracy": 0.856
+        },
+        "2": {
+          "n": 110,
+          "execution_accuracy": 0.8545
+        },
+        "3": {
+          "n": 15,
+          "execution_accuracy": 0.8667
+        },
+        "4": {
+          "n": 5,
+          "execution_accuracy": 0.6
+        }
+      },
+      "by_agg_index": {
+        "0": {
+          "n": 376,
+          "execution_accuracy": 0.8777
+        },
+        "1": {
+          "n": 25,
+          "execution_accuracy": 0.72
+        },
+        "2": {
+          "n": 25,
+          "execution_accuracy": 0.88
+        },
+        "3": {
+          "n": 52,
+          "execution_accuracy": 0.7692
+        },
+        "4": {
+          "n": 7,
+          "execution_accuracy": 0.8571
+        },
+        "5": {
+          "n": 15,
+          "execution_accuracy": 0.7333
+        }
+      }
+    }
+  },
+  "training_scale": {
+    "n_train_records": 6000,
+    "num_train_epochs": 2,
+    "train_runtime_seconds": 6711.3,
+    "peak_vram_gib": 2.628,
+    "trainable_parameters": 18464768,
+    "trainable_percent": 2.0356,
+    "lora_rank": 16
+  },
+  "deltas": {
+    "execution_accuracy": 0.456,
+    "syntactic_validity_rate": 0.446,
+    "exact_match_accuracy": 0.744,
+    "sql_extraction_rate": 0.0
+  },
+  "confidence_intervals": {
+    "baseline_execution_accuracy_95ci": [
+      0.356,
+      0.4415
+    ],
+    "finetuned_execution_accuracy_95ci": [
+      0.8204,
+      0.8823
+    ]
+  },
+  "mcnemar": {
+    "fixed_by_finetuning": 238,
+    "broken_by_finetuning": 10,
+    "both_correct": 189,
+    "both_wrong": 63,
+    "discordant_pairs": 248,
+    "chi_square_continuity_corrected": 207.778,
+    "p_value": 4.1937831453065213e-47,
+    "p_value_display": "<1e-15",
+    "significant_at_0_01": true
+  },
+  "conditional_accuracy": {
+    "baseline_executed": 276,
+    "baseline_correct": 199,
+    "baseline_accuracy_given_execution": 0.721,
+    "finetuned_executed": 499,
+    "finetuned_correct": 427,
+    "finetuned_accuracy_given_execution": 0.8557
+  },
+  "leakage_checks": {
+    "train_tables": 5179,
+    "eval_tables": 483,
+    "table_overlap": 0,
+    "shared_question_strings": 1,
+    "shared_questions_with_identical_gold_sql": 0,
+    "shared_question_examples": [
+      {
+        "question": "Which country has a rank of 5?",
+        "train_table": "table_2_14640226_3",
+        "eval_table": "table_14752049_1",
+        "identical_gold_sql": false
+      }
+    ]
+  },
+  "examples": {
+    "fixed_by_finetuning": [
+      {
+        "question": "What is the lowest attendance when footscray is the away team?",
+        "gold_sql": "SELECT MIN(\"Crowd\") FROM \"table_2_10640687_18\" WHERE \"Away team\" = 'footscray'",
+        "baseline_sql": "SELECT MIN(Crowd) AS min_attendance FROM table_2_10640687_18 WHERE Away_team = 'footscray'",
+        "baseline_failure": "sql_error: OperationalError: no such column: Away_team",
+        "finetuned_sql": "SELECT MIN(\"Crowd\") FROM \"table_2_10640687_18\" WHERE \"Away team\" = 'footscray'",
+        "finetuned_failure": null
+      },
+      {
+        "question": "Which charts had debut sales of of more than 339333.011497678?",
+        "gold_sql": "SELECT \"Oricon Albums Chart\" FROM \"table_23180638_1\" WHERE \"Debut Sales (copies)\" > 339333.011497678",
+        "baseline_sql": "SELECT Oricon Albums Chart FROM table_23180638_1 WHERE Debut Sales (copies) > 339333.011497678",
+        "baseline_failure": "sql_error: OperationalError: near \"Chart\": syntax error",
+        "finetuned_sql": "SELECT \"Oricon Albums Chart\" FROM \"table_23180638_1\" WHERE \"Debut Sales (copies)\" > 339333.011497678",
+        "finetuned_failure": null
+      },
+      {
+        "question": "What is the original airdate when the season number is 4?",
+        "gold_sql": "SELECT \"Original air date\" FROM \"table_15824796_5\" WHERE \"Season #\" = 4",
+        "baseline_sql": "SELECT Original_air_date FROM table_15824796_5 WHERE Season_# = 4",
+        "baseline_failure": "sql_error: OperationalError: unrecognized token: \"#\"",
+        "finetuned_sql": "SELECT \"Original air date\" FROM \"table_15824796_5\" WHERE \"Season #\" = 4",
+        "finetuned_failure": null
+      }
+    ],
+    "broken_by_finetuning": [
+      {
+        "question": "Who was Kraco Twin 125 (R2)'s Winning Driver?",
+        "gold_sql": "SELECT \"Winning driver\" FROM \"table_2_10706879_3\" WHERE \"Name\" = 'kraco twin 125 (r2)'",
+        "baseline_sql": "SELECT `Winning driver` FROM `table_2_10706879_3` WHERE `Name` = 'Kraco Twin 125 (R2)'",
+        "baseline_failure": null,
+        "finetuned_sql": "SELECT \"Winning driver\" FROM \"table_2_10706879_3\" WHERE \"Fastest Lap\" = 'kraco twin 125 (r2)'",
+        "finetuned_failure": "wrong_result"
+      },
+      {
+        "question": "I want the lowest Gold for silver being 2 and electronic sports",
+        "gold_sql": "SELECT MIN(\"Gold\") FROM \"table_2_10882501_8\" WHERE \"Silver\" = 2 AND \"Sport\" = 'electronic sports'",
+        "baseline_sql": "SELECT MIN(\"Gold\") AS \"Lowest_Gold\" FROM \"table_2_10882501_8\" WHERE \"Silver\" = 2 AND \"Sport\" LIKE \"%electronic%\"",
+        "baseline_failure": null,
+        "finetuned_sql": "SELECT MIN(\"Gold\") FROM \"table_2_10882501_8\" WHERE \"Silver\" = 2 AND \"Sport\" = 'electronic'",
+        "finetuned_failure": "wrong_result"
+      },
+      {
+        "question": "How many points total are there later than 2003?",
+        "gold_sql": "SELECT SUM(\"Points\") FROM \"table_2_1618788_2\" WHERE \"Year\" > 2003",
+        "baseline_sql": "SELECT SUM(Points) AS TotalPoints FROM table_2_1618788_2 WHERE Year > 2003",
+        "baseline_failure": null,
+        "finetuned_sql": "SELECT COUNT(\"Points\") FROM \"table_2_1618788_2\" WHERE \"Year\" > 2003",
+        "finetuned_failure": "wrong_result"
+      }
+    ]
+  }
+}

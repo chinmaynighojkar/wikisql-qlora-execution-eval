@@ -1,0 +1,40 @@
+# Python 3.10 (project target -- matches the working setup on the sibling
+# projects in C:\Projects). Every package below still publishes 3.10 wheels,
+# but 3.10 is now the *minimum* supported version across this stack, so a
+# future upgrade to 3.11/3.12 is a known piece of maintenance debt.
+#
+# torch MUST come from the CUDA wheel index. The PyPI build is CPU-only on
+# Windows and cannot run bitsandbytes 4-bit kernels.
+#
+# It is pinned here *with its local version suffix* (`+cu130`) rather than
+# left out, because torch is a transitive dependency of transformers, peft,
+# trl and accelerate. Omitting it does not avoid the problem -- it just lets
+# pip resolve torch from PyPI on its own and silently install the CPU wheel.
+# That failure is quiet: everything imports, and only the 4-bit load fails,
+# much later. Pinning the exact local version makes the wrong build
+# unsatisfiable instead of merely discouraged.
+#
+# cu130 matches the driver on the target machine (595.95 / CUDA 13.2). For a
+# driver that only supports CUDA 12.x, swap both lines below to cu126:
+#   --extra-index-url https://download.pytorch.org/whl/cu126
+#   torch==2.13.0+cu126
+--extra-index-url https://download.pytorch.org/whl/cu130
+torch==2.13.0+cu130
+
+# Versions are pinned exactly so the before/after fine-tuning comparison is
+# reproducible: a transformers or peft upgrade mid-project could shift the
+# numbers for reasons unrelated to fine-tuning.
+
+transformers==5.14.1
+peft==0.20.0
+trl==1.9.2
+bitsandbytes==0.50.0
+accelerate==1.14.0
+datasets==5.0.1
+
+# Config loading and table materialisation.
+# sqlite3 is stdlib -- no dependency needed for the execution harness.
+PyYAML==6.0.2
+
+# Test suite for the eval harness (Phases 1-4).
+pytest==8.3.4

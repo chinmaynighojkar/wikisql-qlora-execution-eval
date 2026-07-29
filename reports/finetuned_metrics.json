@@ -1,0 +1,78 @@
+{
+  "name": "finetuned",
+  "generated_at_utc": "2026-07-29T11:27:49Z",
+  "adapter": "models\\lora-adapter",
+  "model": null,
+  "eval_records": "data\\processed\\test_eval.jsonl",
+  "n_records": 500,
+  "decoding": {
+    "strategy": "greedy",
+    "max_new_tokens": 128
+  },
+  "generation_seconds": 302.1,
+  "metrics": {
+    "n": 500,
+    "execution_accuracy": 0.854,
+    "syntactic_validity_rate": 0.998,
+    "exact_match_accuracy": 0.778,
+    "sql_extraction_rate": 1.0,
+    "counts": {
+      "execution_match": 427,
+      "executed": 499,
+      "exact_match": 389,
+      "sql_extracted": 500
+    },
+    "failure_breakdown": {
+      "wrong_result": 72,
+      "unknown_identifier": 1
+    },
+    "by_condition_count": {
+      "0": {
+        "n": 2,
+        "execution_accuracy": 1.0
+      },
+      "1": {
+        "n": 368,
+        "execution_accuracy": 0.856
+      },
+      "2": {
+        "n": 110,
+        "execution_accuracy": 0.8545
+      },
+      "3": {
+        "n": 15,
+        "execution_accuracy": 0.8667
+      },
+      "4": {
+        "n": 5,
+        "execution_accuracy": 0.6
+      }
+    },
+    "by_agg_index": {
+      "0": {
+        "n": 376,
+        "execution_accuracy": 0.8777
+      },
+      "1": {
+        "n": 25,
+        "execution_accuracy": 0.72
+      },
+      "2": {
+        "n": 25,
+        "execution_accuracy": 0.88
+      },
+      "3": {
+        "n": 52,
+        "execution_accuracy": 0.7692
+      },
+      "4": {
+        "n": 7,
+        "execution_accuracy": 0.8571
+      },
+      "5": {
+        "n": 15,
+        "execution_accuracy": 0.7333
+      }
+    }
+  }
+}

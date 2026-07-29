@@ -1,0 +1,109 @@
+{
+  "phase": 3,
+  "generated_at_utc": "2026-07-28T23:05:16Z",
+  "overall_result": "FAIL",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "lora": {
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "bias": "none",
+    "task_type": "CAUSAL_LM",
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ]
+  },
+  "training": {
+    "num_train_epochs": 1.0,
+    "per_device_train_batch_size": 1,
+    "gradient_accumulation_steps": 16,
+    "gradient_checkpointing": true,
+    "optim": "paged_adamw_8bit",
+    "learning_rate": 0.0002,
+    "lr_scheduler_type": "cosine",
+    "warmup_ratio": 0.03,
+    "max_grad_norm": 0.3,
+    "weight_decay": 0.0,
+    "max_length": 512,
+    "logging_steps": 10,
+    "save_strategy": "no",
+    "seed": 20260728,
+    "packing": false
+  },
+  "n_train_records": 200,
+  "token_length_stats": {
+    "n": 200,
+    "min": 152,
+    "median": 181,
+    "p95": 220,
+    "max": 274,
+    "mean": 185.9
+  },
+  "trainable_parameters": 18464768,
+  "total_parameters": 907081216,
+  "trainable_percent": 2.0356,
+  "train_runtime_seconds": 102.2,
+  "peak_vram_gib": 2.598,
+  "final_train_loss": 0.11460019304202153,
+  "loss_first": 0.13232953548431398,
+  "loss_last": 0.13232953548431398,
+  "loss_decreased": false,
+  "loss_history": [
+    {
+      "loss": 0.13232953548431398,
+      "grad_norm": 0.423828125,
+      "learning_rate": 5.000000000000002e-05,
+      "entropy": 0.09859709453885443,
+      "num_tokens": 29820.0,
+      "mean_token_accuracy": 0.9636723138391972,
+      "epoch": 0.8,
+      "step": 10
+    }
+  ],
+  "smoke_test": {
+    "n": 3,
+    "produced_executable_sql": 3,
+    "execution_matches": 2,
+    "examples": [
+      {
+        "table_id": "2-18493040-4",
+        "question": "On what date was game 3?",
+        "gold_sql": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = '3'",
+        "predicted_sql": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = '3'",
+        "raw_output": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = '3'",
+        "executed": true,
+        "execution_match": true,
+        "exact_match": true,
+        "failure_reason": null
+      },
+      {
+        "table_id": "1-19834691-4",
+        "question": "Name the timeslot for 6.51 viewers",
+        "gold_sql": "SELECT \"Timeslot\" FROM \"table_19834691_4\" WHERE \"Viewers (millions)\" = '6.51'",
+        "predicted_sql": "SELECT \"Timeslot\" FROM \"table_19834691_4\" WHERE \"Viewers (millions)\" = '6.51'",
+        "raw_output": "SELECT \"Timeslot\" FROM \"table_19834691_4\" WHERE \"Viewers (millions)\" = '6.51'",
+        "executed": true,
+        "execution_match": true,
+        "exact_match": true,
+        "failure_reason": null
+      },
+      {
+        "table_id": "1-15301258-1",
+        "question": "Name the best supporting actress for sun honglei for mongol",
+        "gold_sql": "SELECT \"Best Supporting Actress\" FROM \"table_15301258_1\" WHERE \"Best Supporting Actor\" = 'Sun Honglei for Mongol'",
+        "predicted_sql": "SELECT \"Best Supporting Actress\" FROM \"table_15301258_1\" WHERE \"Best Director\" = 'sun honglei'",
+        "raw_output": "SELECT \"Best Supporting Actress\" FROM \"table_15301258_1\" WHERE \"Best Director\" = 'sun honglei'",
+        "executed": true,
+        "execution_match": false,
+        "exact_match": false,
+        "failure_reason": "wrong_result"
+      }
+    ]
+  }
+}

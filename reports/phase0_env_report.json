@@ -1,0 +1,166 @@
+{
+  "phase": 0,
+  "purpose": "Verify 4-bit NF4 load + forward pass fits in available VRAM",
+  "generated_at_utc": "2026-07-28T19:32:04Z",
+  "overall_result": "PASS",
+  "checks": [
+    {
+      "name": "python_version",
+      "passed": true,
+      "detail": "Python 3.10.0",
+      "data": {
+        "version": "3.10.0",
+        "matches_target_3_10": true,
+        "executable": "C:\\Projects\\lora-text-to-sql\\.venv\\Scripts\\python.exe"
+      }
+    },
+    {
+      "name": "platform",
+      "passed": true,
+      "detail": "Windows 10",
+      "data": {
+        "system": "Windows",
+        "release": "10",
+        "machine": "AMD64"
+      }
+    },
+    {
+      "name": "torch_import",
+      "passed": true,
+      "detail": "torch 2.13.0+cu130",
+      "data": {
+        "version": "2.13.0+cu130",
+        "cuda_build": "13.0"
+      }
+    },
+    {
+      "name": "torch_cuda_build",
+      "passed": true,
+      "detail": "CUDA build 13.0",
+      "data": {}
+    },
+    {
+      "name": "cuda_available",
+      "passed": true,
+      "detail": "NVIDIA GeForce RTX 3050 Laptop GPU (4.0 GiB total, 3.228 GiB free)",
+      "data": {
+        "device_name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+        "compute_capability": "8.6",
+        "total_vram_gib": 4.0,
+        "free_vram_gib_at_start": 3.228
+      }
+    },
+    {
+      "name": "bf16_support",
+      "passed": true,
+      "detail": "bf16 supported",
+      "data": {
+        "supports_bf16": true
+      }
+    },
+    {
+      "name": "bitsandbytes_import",
+      "passed": true,
+      "detail": "bitsandbytes 0.50.0",
+      "data": {
+        "version": "0.50.0"
+      }
+    },
+    {
+      "name": "bitsandbytes_nf4_kernel",
+      "passed": true,
+      "detail": "NF4 quantise/dequantise round-trip succeeded on GPU",
+      "data": {
+        "mean_abs_reconstruction_error": 0.07331
+      }
+    },
+    {
+      "name": "model_load_4bit",
+      "passed": true,
+      "detail": "loaded in 3734.4s",
+      "data": {
+        "model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+        "compute_dtype": "torch.bfloat16",
+        "quant_type": "nf4",
+        "double_quant": true,
+        "load_seconds": 3734.4,
+        "weights_vram_gib_device_wide": 1.119,
+        "torch_allocated_gib": 1.074
+      }
+    },
+    {
+      "name": "no_cpu_offload",
+      "passed": true,
+      "detail": "all parameters resident on GPU",
+      "data": {
+        "offloaded_sample": {}
+      }
+    },
+    {
+      "name": "parameter_count",
+      "passed": true,
+      "detail": "0.889B parameters materialised",
+      "data": {
+        "total_parameters": 888616448
+      }
+    },
+    {
+      "name": "forward_pass",
+      "passed": true,
+      "detail": "completed in 0.555s on 100 tokens",
+      "data": {
+        "sequence_length": 100,
+        "logits_shape": [
+          1,
+          100,
+          151936
+        ],
+        "seconds": 0.555
+      }
+    },
+    {
+      "name": "forward_pass_loss_sane",
+      "passed": true,
+      "detail": "cross-entropy loss 3.0184 is in the plausible range",
+      "data": {
+        "loss": 3.0184
+      }
+    },
+    {
+      "name": "vram_headroom",
+      "passed": true,
+      "detail": "2.066 GiB of 4.0 GiB in use after the forward pass (1.933 GiB free)",
+      "data": {
+        "peak_torch_allocated_gib": 1.227,
+        "peak_torch_reserved_gib": 1.27,
+        "device_wide_used_gib": 2.066,
+        "device_wide_free_gib": 1.933,
+        "total_vram_gib": 4.0,
+        "forward_pass_delta_gib": 0.166
+      }
+    },
+    {
+      "name": "generation_smoke_test",
+      "passed": true,
+      "detail": "generated 35 tokens in 1.73s (20.2 tok/s)",
+      "data": {
+        "seconds": 1.73,
+        "tokens_per_second": 20.2,
+        "sample_output": "SELECT School_Club_Team FROM table_1_10015132_16 WHERE No. = \"21\" LIMIT 1;"
+      }
+    },
+    {
+      "name": "train_probe",
+      "passed": true,
+      "detail": "one LoRA fwd+bwd (batch 1, 100 tokens) peaked at 2.43 GiB allocated",
+      "data": {
+        "trainable_parameters": 18464768,
+        "total_parameters": 907081216,
+        "trainable_percent": 2.0356,
+        "peak_torch_allocated_gib": 2.43,
+        "total_vram_gib": 4.0,
+        "note": "Batch 1 with gradient checkpointing and no optimiser states. Real training adds AdamW state for the LoRA params only (~8 bytes/trainable param). Indicative, not authoritative."
+      }
+    }
+  ]
+}
