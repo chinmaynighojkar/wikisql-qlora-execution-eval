@@ -60,28 +60,24 @@ Execution accuracy **39.8% → 85.4%**, verified significant and leakage-free
 ### The more useful finding
 
 Measuring more than one training size turned a before/after into a
-data-efficiency curve:
+data-efficiency curve. All three runs hold epochs constant at 2, so training
+data size is the only variable that changes between rows:
 
 | Train examples | Execution accuracy | Gain | Share of total gain | Train time |
 |---:|---:|---:|---:|---:|
 | 0 | 39.8% | — | 0% | — |
-| 200 | 76.0% | +36.2 pts | **79%** | **102 s** |
+| 200 | 77.2% | +37.4 pts | **82%** | **12 min** |
+| 1,000 | 81.8% | +42.0 pts | 92% | 50 min |
 | 6,000 | 85.4% | +45.6 pts | 100% | 112 min |
 
-**200 examples and 102 seconds of training captured 79% of the total
-achievable gain.** The remaining 21% cost 30× the data and 66× the training
-time — a 249× worse marginal return per second of compute.
+**200 examples and 12 minutes of training captured 82% of the total
+achievable gain.** Going from 200 to 1,000 examples (5× the data, roughly 4×
+the training time) bought another 10 points of that share; going from 1,000
+to 6,000 (6× the data, roughly 2× the time) bought only the remaining 8%.
 
 For anyone budgeting a fine-tune, that is the more actionable result: the
 question is not "does fine-tuning help" but "how little is enough", and here
-the answer was a couple of hundred examples.
-
-> **Caveat, stated plainly:** the n=200 point ran 1 epoch and the n=6,000 point
-> ran 2, so that row varies data *and* epochs together. The direction is not in
-> doubt — 36.2 of 45.6 points from 1.5% of the training time — but the exact
-> share would shift under a clean 2-epoch run at n=200. Re-running is a
-> 3-minute job (`run_scaling_study.py --sizes 200 1000`) and would also locate
-> the knee, which is currently interpolated.
+the answer is a clear diminishing-returns curve rather than a single number.
 
 ---
 
@@ -327,7 +323,6 @@ Stated up front rather than discovered later.
   comparable to leaderboard figures computed over the full test split.
 - **`COLLATE NOCASE` folds ASCII only.** Case differences in non-ASCII text
   (`Cerro Porteño`) are not folded.
-- **The data-efficiency curve has two points and an epoch confound** (above).
 - **One model, one dataset.** No claim that the improvement generalises to
   other model families or SQL dialects.
 

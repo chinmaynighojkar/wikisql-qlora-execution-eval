@@ -1,7 +1,7 @@
 {
-  "name": "finetuned200",
-  "generated_at_utc": "2026-07-29T19:11:57Z",
-  "adapter": "C:\\Projects\\lora-text-to-sql\\models\\lora-200",
+  "name": "finetuned1000",
+  "generated_at_utc": "2026-07-29T20:37:59Z",
+  "adapter": "C:\\Projects\\lora-text-to-sql\\models\\lora-1000",
   "model": null,
   "eval_records": "data\\processed\\test_eval.jsonl",
   "n_records": 500,
@@ -9,23 +9,22 @@
     "strategy": "greedy",
     "max_new_tokens": 128
   },
-  "generation_seconds": 993.2,
+  "generation_seconds": 991.6,
   "metrics": {
     "n": 500,
-    "execution_accuracy": 0.772,
-    "syntactic_validity_rate": 0.98,
-    "exact_match_accuracy": 0.684,
+    "execution_accuracy": 0.818,
+    "syntactic_validity_rate": 0.994,
+    "exact_match_accuracy": 0.74,
     "sql_extraction_rate": 1.0,
     "counts": {
-      "execution_match": 386,
-      "executed": 490,
-      "exact_match": 342,
+      "execution_match": 409,
+      "executed": 497,
+      "exact_match": 370,
       "sql_extracted": 500
     },
     "failure_breakdown": {
-      "wrong_result": 104,
-      "sql_error": 5,
-      "unknown_identifier": 5
+      "wrong_result": 88,
+      "unknown_identifier": 3
     },
     "by_condition_count": {
       "0": {
@@ -34,29 +33,29 @@
       },
       "1": {
         "n": 368,
-        "execution_accuracy": 0.8071
+        "execution_accuracy": 0.8533
       },
       "2": {
         "n": 110,
-        "execution_accuracy": 0.7
+        "execution_accuracy": 0.7273
       },
       "3": {
         "n": 15,
-        "execution_accuracy": 0.6
+        "execution_accuracy": 0.7333
       },
       "4": {
         "n": 5,
-        "execution_accuracy": 0.2
+        "execution_accuracy": 0.4
       }
     },
     "by_agg_index": {
       "0": {
         "n": 376,
-        "execution_accuracy": 0.7952
+        "execution_accuracy": 0.8431
       },
       "1": {
         "n": 25,
-        "execution_accuracy": 0.6
+        "execution_accuracy": 0.68
       },
       "2": {
         "n": 25,
@@ -64,15 +63,15 @@
       },
       "3": {
         "n": 52,
-        "execution_accuracy": 0.6154
+        "execution_accuracy": 0.6731
       },
       "4": {
         "n": 7,
-        "execution_accuracy": 0.8571
+        "execution_accuracy": 1.0
       },
       "5": {
         "n": 15,
-        "execution_accuracy": 0.8
+        "execution_accuracy": 0.7333
       }
     }
   }

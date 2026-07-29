@@ -1,0 +1,222 @@
+{
+  "phase": 3,
+  "generated_at_utc": "2026-07-29T20:20:57Z",
+  "overall_result": "PASS",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "lora": {
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "bias": "none",
+    "task_type": "CAUSAL_LM",
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ]
+  },
+  "training": {
+    "num_train_epochs": 2.0,
+    "per_device_train_batch_size": 1,
+    "gradient_accumulation_steps": 16,
+    "gradient_checkpointing": true,
+    "optim": "paged_adamw_8bit",
+    "learning_rate": 0.0002,
+    "lr_scheduler_type": "cosine",
+    "warmup_ratio": 0.03,
+    "max_grad_norm": 0.3,
+    "weight_decay": 0.0,
+    "max_length": 512,
+    "logging_steps": 10,
+    "save_strategy": "no",
+    "seed": 20260728,
+    "packing": false
+  },
+  "n_train_records": 1000,
+  "token_length_stats": {
+    "n": 1000,
+    "min": 151,
+    "median": 181,
+    "p95": 232,
+    "max": 369,
+    "mean": 186.3
+  },
+  "trainable_parameters": 18464768,
+  "total_parameters": 907081216,
+  "trainable_percent": 2.0356,
+  "train_runtime_seconds": 2980.5,
+  "peak_vram_gib": 2.613,
+  "final_train_loss": 0.04755085446531811,
+  "loss_first": 0.14762544631958008,
+  "loss_last": 0.02898215651512146,
+  "loss_decreased": true,
+  "loss_trend_detail": "mean of first 3 logged step(s) = 0.0910, last 3 = 0.0238 (-73.9%)",
+  "optimizer_steps": 125,
+  "logged_loss_points": 12,
+  "loss_history": [
+    {
+      "loss": 0.14762544631958008,
+      "grad_norm": 0.3203125,
+      "learning_rate": 0.00019917226741361015,
+      "entropy": 0.10663692549569533,
+      "num_tokens": 30091.0,
+      "mean_token_accuracy": 0.9618416450917721,
+      "epoch": 0.16,
+      "step": 10
+    },
+    {
+      "loss": 0.06515142917633057,
+      "grad_norm": 0.263671875,
+      "learning_rate": 0.00019263239682514952,
+      "entropy": 0.06421199182514101,
+      "num_tokens": 59899.0,
+      "mean_token_accuracy": 0.981881145015359,
+      "epoch": 0.32,
+      "step": 20
+    },
+    {
+      "loss": 0.06035974621772766,
+      "grad_norm": 0.390625,
+      "learning_rate": 0.00017998392447397197,
+      "entropy": 0.051501961490430404,
+      "num_tokens": 89617.0,
+      "mean_token_accuracy": 0.983113418519497,
+      "epoch": 0.48,
+      "step": 30
+    },
+    {
+      "loss": 0.0553318977355957,
+      "grad_norm": 0.13671875,
+      "learning_rate": 0.00016206094818274229,
+      "entropy": 0.061008614796446634,
+      "num_tokens": 119084.0,
+      "mean_token_accuracy": 0.982143909484148,
+      "epoch": 0.64,
+      "step": 40
+    },
+    {
+      "loss": 0.04652751088142395,
+      "grad_norm": 0.33203125,
+      "learning_rate": 0.00014004539056512667,
+      "entropy": 0.04840054494998185,
+      "num_tokens": 148493.0,
+      "mean_token_accuracy": 0.9856440320611,
+      "epoch": 0.8,
+      "step": 50
+    },
+    {
+      "loss": 0.05102078318595886,
+      "grad_norm": 0.142578125,
+      "learning_rate": 0.0001153890576704062,
+      "entropy": 0.047006124167819505,
+      "num_tokens": 178965.0,
+      "mean_token_accuracy": 0.9827638857066632,
+      "epoch": 0.96,
+      "step": 60
+    },
+    {
+      "loss": 0.032790777087211606,
+      "grad_norm": 0.099609375,
+      "learning_rate": 8.971790028626395e-05,
+      "entropy": 0.04450623416433748,
+      "num_tokens": 207157.0,
+      "mean_token_accuracy": 0.9888943794526552,
+      "epoch": 1.112,
+      "step": 70
+    },
+    {
+      "loss": 0.027550244331359865,
+      "grad_norm": 0.2119140625,
+      "learning_rate": 6.472479134509052e-05,
+      "entropy": 0.03371126589627238,
+      "num_tokens": 237293.0,
+      "mean_token_accuracy": 0.9905328888446092,
+      "epoch": 1.272,
+      "step": 80
+    },
+    {
+      "loss": 0.028125265240669252,
+      "grad_norm": 0.1650390625,
+      "learning_rate": 4.205789017954364e-05,
+      "entropy": 0.032668456545070515,
+      "num_tokens": 267415.0,
+      "mean_token_accuracy": 0.991615530103445,
+      "epoch": 1.432,
+      "step": 90
+    },
+    {
+      "loss": 0.02059464156627655,
+      "grad_norm": 0.09130859375,
+      "learning_rate": 2.3211955396340002e-05,
+      "entropy": 0.033008993795374406,
+      "num_tokens": 297349.0,
+      "mean_token_accuracy": 0.9931439366191626,
+      "epoch": 1.592,
+      "step": 100
+    },
+    {
+      "loss": 0.021807384490966798,
+      "grad_norm": 0.146484375,
+      "learning_rate": 9.429773691952858e-06,
+      "entropy": 0.029167760097334395,
+      "num_tokens": 326987.0,
+      "mean_token_accuracy": 0.9914438519626856,
+      "epoch": 1.752,
+      "step": 110
+    },
+    {
+      "loss": 0.02898215651512146,
+      "grad_norm": 0.1767578125,
+      "learning_rate": 1.6202048426483651e-06,
+      "entropy": 0.030987371884839375,
+      "num_tokens": 356252.0,
+      "mean_token_accuracy": 0.9900915443897247,
+      "epoch": 1.912,
+      "step": 120
+    }
+  ],
+  "smoke_test": {
+    "n": 3,
+    "produced_executable_sql": 3,
+    "execution_matches": 1,
+    "examples": [
+      {
+        "table_id": "2-18493040-4",
+        "question": "On what date was game 3?",
+        "gold_sql": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = '3'",
+        "predicted_sql": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = 'game 3'",
+        "raw_output": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = 'game 3'",
+        "executed": true,
+        "execution_match": false,
+        "exact_match": false,
+        "failure_reason": "wrong_result"
+      },
+      {
+        "table_id": "1-19834691-4",
+        "question": "Name the timeslot for 6.51 viewers",
+        "gold_sql": "SELECT \"Timeslot\" FROM \"table_19834691_4\" WHERE \"Viewers (millions)\" = '6.51'",
+        "predicted_sql": "SELECT \"Timeslot\" FROM \"table_19834691_4\" WHERE \"Viewers (millions)\" = '6.51'",
+        "raw_output": "SELECT \"Timeslot\" FROM \"table_19834691_4\" WHERE \"Viewers (millions)\" = '6.51'",
+        "executed": true,
+        "execution_match": true,
+        "exact_match": true,
+        "failure_reason": null
+      },
+      {
+        "table_id": "1-15301258-1",
+        "question": "Name the best supporting actress for sun honglei for mongol",
+        "gold_sql": "SELECT \"Best Supporting Actress\" FROM \"table_15301258_1\" WHERE \"Best Supporting Actor\" = 'Sun Honglei for Mongol'",
+        "predicted_sql": "SELECT \"Best Supporting Actress\" FROM \"table_15301258_1\" WHERE \"Best Director\" = 'sun honglei'",
+        "raw_output": "SELECT \"Best Supporting Actress\" FROM \"table_15301258_1\" WHERE \"Best Director\" = 'sun honglei'",
+        "executed": true,
+        "execution_match": false,
+        "exact_match": false,
+        "failure_reason": "wrong_result"
+      }
+    ]
+  }
+}

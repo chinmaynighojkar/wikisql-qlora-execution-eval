@@ -1,7 +1,7 @@
 {
   "phase": 3,
-  "generated_at_utc": "2026-07-28T23:05:16Z",
-  "overall_result": "FAIL",
+  "generated_at_utc": "2026-07-29T18:54:58Z",
+  "overall_result": "PASS",
   "model": "Qwen/Qwen2.5-1.5B-Instruct",
   "lora": {
     "r": 16,
@@ -20,7 +20,7 @@
     ]
   },
   "training": {
-    "num_train_epochs": 1.0,
+    "num_train_epochs": 2.0,
     "per_device_train_batch_size": 1,
     "gradient_accumulation_steps": 16,
     "gradient_checkpointing": true,
@@ -31,7 +31,7 @@
     "max_grad_norm": 0.3,
     "weight_decay": 0.0,
     "max_length": 512,
-    "logging_steps": 10,
+    "logging_steps": 3,
     "save_strategy": "no",
     "seed": 20260728,
     "packing": false
@@ -48,39 +48,112 @@
   "trainable_parameters": 18464768,
   "total_parameters": 907081216,
   "trainable_percent": 2.0356,
-  "train_runtime_seconds": 102.2,
+  "train_runtime_seconds": 694.4,
   "peak_vram_gib": 2.598,
-  "final_train_loss": 0.11460019304202153,
-  "loss_first": 0.13232953548431398,
-  "loss_last": 0.13232953548431398,
-  "loss_decreased": false,
+  "final_train_loss": 0.07422455256948104,
+  "loss_first": 0.21438604593276978,
+  "loss_last": 0.04142563541730245,
+  "loss_decreased": true,
+  "loss_trend_detail": "mean of first 2 logged step(s) = 0.1649, last 2 = 0.0365 (-77.9%)",
+  "optimizer_steps": 25,
+  "logged_loss_points": 8,
   "loss_history": [
     {
-      "loss": 0.13232953548431398,
-      "grad_norm": 0.423828125,
-      "learning_rate": 5.000000000000002e-05,
-      "entropy": 0.09859709453885443,
-      "num_tokens": 29820.0,
-      "mean_token_accuracy": 0.9636723138391972,
-      "epoch": 0.8,
-      "step": 10
+      "loss": 0.21438604593276978,
+      "grad_norm": 0.53515625,
+      "learning_rate": 0.0001992114701314478,
+      "entropy": 0.09009562316350639,
+      "num_tokens": 8906.0,
+      "mean_token_accuracy": 0.9365505402286848,
+      "epoch": 0.24,
+      "step": 3
+    },
+    {
+      "loss": 0.11545773347218831,
+      "grad_norm": 0.443359375,
+      "learning_rate": 0.00018763066800438636,
+      "entropy": 0.10097580457416673,
+      "num_tokens": 17773.0,
+      "mean_token_accuracy": 0.9736526235938072,
+      "epoch": 0.48,
+      "step": 6
+    },
+    {
+      "loss": 0.08266959091027577,
+      "grad_norm": 0.5859375,
+      "learning_rate": 0.000163742398974869,
+      "entropy": 0.10538556446166088,
+      "num_tokens": 26788.0,
+      "mean_token_accuracy": 0.9758097790181637,
+      "epoch": 0.72,
+      "step": 9
+    },
+    {
+      "loss": 0.06656161447366078,
+      "grad_norm": 0.357421875,
+      "learning_rate": 0.00013090169943749476,
+      "entropy": 0.06164253792182232,
+      "num_tokens": 35663.0,
+      "mean_token_accuracy": 0.9804319739341736,
+      "epoch": 0.96,
+      "step": 12
+    },
+    {
+      "loss": 0.038466520607471466,
+      "grad_norm": 0.263671875,
+      "learning_rate": 9.372094804706867e-05,
+      "entropy": 0.05050202049314976,
+      "num_tokens": 43029.0,
+      "mean_token_accuracy": 0.9870132133364677,
+      "epoch": 1.16,
+      "step": 15
+    },
+    {
+      "loss": 0.029830090701580048,
+      "grad_norm": 0.2275390625,
+      "learning_rate": 5.7422070843492734e-05,
+      "entropy": 0.046417349706947185,
+      "num_tokens": 52437.0,
+      "mean_token_accuracy": 0.9891665975252787,
+      "epoch": 1.4,
+      "step": 18
+    },
+    {
+      "loss": 0.03158393253882726,
+      "grad_norm": 0.1728515625,
+      "learning_rate": 2.7103137257858868e-05,
+      "entropy": 0.04534868539000551,
+      "num_tokens": 61214.0,
+      "mean_token_accuracy": 0.9915637957553068,
+      "epoch": 1.6400000000000001,
+      "step": 21
+    },
+    {
+      "loss": 0.04142563541730245,
+      "grad_norm": 0.2451171875,
+      "learning_rate": 7.022351411174866e-06,
+      "entropy": 0.0465346468554344,
+      "num_tokens": 70034.0,
+      "mean_token_accuracy": 0.9865232842663924,
+      "epoch": 1.88,
+      "step": 24
     }
   ],
   "smoke_test": {
     "n": 3,
     "produced_executable_sql": 3,
-    "execution_matches": 2,
+    "execution_matches": 1,
     "examples": [
       {
         "table_id": "2-18493040-4",
         "question": "On what date was game 3?",
         "gold_sql": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = '3'",
-        "predicted_sql": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = '3'",
-        "raw_output": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = '3'",
+        "predicted_sql": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = 'game 3'",
+        "raw_output": "SELECT \"Date\" FROM \"table_2_18493040_4\" WHERE \"Game\" = 'game 3'",
         "executed": true,
-        "execution_match": true,
-        "exact_match": true,
-        "failure_reason": null
+        "execution_match": false,
+        "exact_match": false,
+        "failure_reason": "wrong_result"
       },
       {
         "table_id": "1-19834691-4",
