@@ -338,11 +338,3 @@ tests/       139 tests
 reports/     metrics, comparison.md, scaling_curve.md (committed)
 docs/        SETUP.md, DECISIONS.md, RESUME_BULLETS.md
 ```
-
-## Related work in this portfolio
-
-Built to the same standard as
-[`heart-disease-mlops`](https://github.com/chinmaynighojkar/heart-disease-mlops):
-real measured numbers only, limitations documented rather than omitted, and
-design decisions recorded with their reasoning. The two projects share no code
-— the standard is the only thing in common.
