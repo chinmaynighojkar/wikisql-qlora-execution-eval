@@ -385,13 +385,15 @@ def main() -> int:
         "conditional_accuracy": {
             "baseline_executed": bm["counts"]["executed"],
             "baseline_correct": bm["counts"]["execution_match"],
-            "baseline_accuracy_given_execution": round(
-                bm["counts"]["execution_match"] / bm["counts"]["executed"], 4
+            "baseline_accuracy_given_execution": (
+                round(bm["counts"]["execution_match"] / bm["counts"]["executed"], 4)
+                if bm["counts"]["executed"] else 0.0
             ),
             "finetuned_executed": fm["counts"]["executed"],
             "finetuned_correct": fm["counts"]["execution_match"],
-            "finetuned_accuracy_given_execution": round(
-                fm["counts"]["execution_match"] / fm["counts"]["executed"], 4
+            "finetuned_accuracy_given_execution": (
+                round(fm["counts"]["execution_match"] / fm["counts"]["executed"], 4)
+                if fm["counts"]["executed"] else 0.0
             ),
         },
         "leakage_checks": leakage_report(),
