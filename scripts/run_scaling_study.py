@@ -90,9 +90,17 @@ def train_stage(size: int, epochs: float, force: bool) -> None:
 
 
 def eval_stage(size: int, batch_size: int, force: bool) -> None:
-    if metrics_path(size).exists() and not force:
+    metrics, report = metrics_path(size), training_report(size)
+    # Skipping on metrics existence alone is not enough: if training was just
+    # re-run (e.g. at a different epoch count) but a stale metrics file from
+    # an earlier run wasn't deleted, the skip would silently pair fresh
+    # training with an old evaluation. Comparing mtimes catches that case.
+    stale = metrics.exists() and report.exists() and metrics.stat().st_mtime < report.stat().st_mtime
+    if metrics.exists() and not force and not stale:
         print(f"\n[skip] evaluation at n={size} (metrics already exist)")
         return
+    if stale:
+        print(f"\n[rerun] evaluation at n={size} (existing metrics predate the current training report)")
     run(
         [
             PYTHON, "scripts/run_eval.py",
