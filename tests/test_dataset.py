@@ -7,15 +7,10 @@ Phase 4 measures a mixture of learning and format mismatch, and nothing in the
 output would look wrong. The number would simply be misleading.
 """
 
-import sys
-from pathlib import Path
-
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-
-from lora_text_to_sql.dataset import to_sft_example, token_length_stats  # noqa: E402
-from lora_text_to_sql.prompt import (  # noqa: E402
+from lora_text_to_sql.dataset import to_sft_example, token_length_stats
+from lora_text_to_sql.prompt import (
     SYSTEM_PROMPT,
     build_messages,
     build_prompt,

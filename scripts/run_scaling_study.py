@@ -39,11 +39,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+from lora_text_to_sql.provenance import capture as capture_provenance
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "src"))
-
-from lora_text_to_sql.provenance import capture as capture_provenance  # noqa: E402
-
 REPORTS = REPO_ROOT / "reports"
 MODELS = REPO_ROOT / "models"
 PYTHON = sys.executable

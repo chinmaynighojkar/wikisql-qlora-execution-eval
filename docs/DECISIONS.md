@@ -85,12 +85,13 @@ cause.
 The project's central claim is a before/after comparison. If `transformers` or
 `peft` changed between the baseline run and the post-fine-tuning run, a
 metric shift could not be attributed to fine-tuning. All versions are pinned
-exactly in `requirements.txt`.
+exactly in `pyproject.toml` (originally `requirements.txt`, replaced when the
+project became an installable package -- see D-028).
 
 torch is excluded from that file on purpose: installing it from PyPI yields
 the CPU-only wheel, which cannot run bitsandbytes 4-bit kernels. It has to
 come from the CUDA wheel index, so it is a documented ordered step in
-`docs/SETUP.md` rather than a line in a requirements file that would silently
+`docs/SETUP.md` rather than a line in a dependency list that would silently
 install the wrong build.
 
 Selected versions (latest available at project start, July 2026):
@@ -551,6 +552,34 @@ split. Drawing from the train subsample would measure memorisation. Drawing
 from the Phase 2/4 test set would leak the evaluation set into a decision made
 during training, which is precisely the contamination the official-splits
 decision (D-002 era) was meant to avoid.
+
+---
+
+## D-028 — Package as an installable project, not `sys.path` hacks
+
+**Status:** Decided · **Phase:** repo hygiene, no phase number
+
+Every script and test file inserted `sys.path.insert(0, str(REPO_ROOT /
+"src"))` before importing from `lora_text_to_sql`, because `src/` was never
+an installed package -- eleven near-identical lines whose only job was
+working around that, each paired with a `# noqa: E402` to silence the
+import-order lint it created. `pip install -e .`, via a new
+`pyproject.toml`, makes the package importable from anywhere without the
+hack, so all eleven lines and their noqa comments were removed.
+
+torch is left out of `pyproject.toml`'s dependency list entirely, which is
+not quite what `requirements.txt` did: that file pinned
+`torch==2.13.0+cu130` inline behind an `--extra-index-url` line, a trick
+specific to a plain requirements file. `pyproject.toml`'s standard
+`dependencies` array has no equivalent per-package index, so a plain
+`torch` entry there would risk resolving the CPU wheel from PyPI silently --
+the exact failure D-005 already documents. torch stays a separately
+installed step (`docs/SETUP.md` step 3, run before `pip install -e .`),
+which is what the setup instructions already required in practice.
+`requirements.txt` itself is removed -- `pyproject.toml` is now the single
+source of pinned versions, and two files pinning the same versions is
+exactly the kind of duplication this project's own `io.py` consolidation
+argues against elsewhere.
 
 ---
 

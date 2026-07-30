@@ -8,14 +8,10 @@ fine-tuning.
 """
 
 import sqlite3
-import sys
-from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-
-from lora_text_to_sql.materialize import (  # noqa: E402
+from lora_text_to_sql.materialize import (
     create_table_statement,
     execute,
     has_colliding_headers,
@@ -23,7 +19,7 @@ from lora_text_to_sql.materialize import (  # noqa: E402
     materialize_split,
     validate_example,
 )
-from lora_text_to_sql.wikisql import WikiSQLExample, WikiSQLTable, render_sql  # noqa: E402
+from lora_text_to_sql.wikisql import WikiSQLExample, WikiSQLTable, render_sql
 
 
 @pytest.fixture

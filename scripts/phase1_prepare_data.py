@@ -31,20 +31,19 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "src"))
-
-from lora_text_to_sql.materialize import (  # noqa: E402
+from lora_text_to_sql.materialize import (
     materialize_split,
     validate_example,
 )
-from lora_text_to_sql.wikisql import (  # noqa: E402
+from lora_text_to_sql.wikisql import (
     WikiSQLExample,
     WikiSQLTable,
     load_examples,
     load_tables,
     render_sql,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # The canonical release. This is the same archive the official Hugging Face
 # loading script downloads. It is used directly because `datasets` >= 3 no
