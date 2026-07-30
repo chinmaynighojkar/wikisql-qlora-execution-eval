@@ -45,6 +45,16 @@ better for roles that emphasise evaluation or work under regulatory scrutiny.
 > 8-bit AdamW and completion-only loss; documented 27 design decisions with
 > their measured justification, backed by 139 tests.
 
+**Process-led — for roles that value code review and reliability**
+
+> Ran a five-axis code review (correctness, readability, architecture,
+> security, performance) against the finished pipeline and found two silent
+> failure modes the test suite had not caught: a scaling study step that
+> could reuse a stale evaluation result after retraining, and a comparison
+> script that divided by zero on a degenerate run. Fixed both, added a
+> modification time check and a zero guard respectively, and confirmed all
+> 139 tests still passed before merging.
+
 ---
 
 ## STAR story
@@ -85,6 +95,13 @@ claim a delta.
 - **Trained at three data scales, all at the same epoch count**, rather than
   a single before/after point or an epoch-confounded pair, turning the result
   into a real diminishing-returns curve.
+- **Followed up with a structured code review** of the finished pipeline
+  across five axes rather than assuming a green test suite meant it was safe
+  to keep running. That review caught two issues the tests had missed: a
+  scaling study step that could silently reuse a stale evaluation result
+  after retraining, and a comparison script that would crash instead of
+  degrade on a run with zero executing queries. Fixed both and confirmed all
+  139 tests still passed before merging.
 
 **Result.** Execution accuracy **39.8% → 85.4%** (+45.6 points); syntactic
 validity 55.2% → 99.8%; `sql_error` failures 219 → 0. Significant under a
@@ -146,6 +163,17 @@ Rejecting it would have penalised the baseline and inflated the fine-tuned
 model's gain, so the check now distinguishes identifier position from value
 position. That's the sort of error that doesn't announce itself — it just
 produces a confident, wrong number.
+
+A second one, later: I ran a structured code review against my own finished
+pipeline across five axes (correctness, readability, architecture, security,
+performance) rather than treating a passing test suite as proof it was safe
+to keep running. It found two latent issues: the scaling study script would
+silently reuse a stale evaluation result if training was rerun at a
+different epoch count and the old output wasn't deleted, and the comparison
+script divided by zero with no guard if a run ever produced zero executing
+queries. Neither had produced a wrong number yet, but both were one rerun
+away from it. I fixed both and confirmed all 139 tests still passed before
+merging.
 
 ---
 
