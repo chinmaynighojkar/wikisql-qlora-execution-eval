@@ -1,4 +1,4 @@
-# Setup — Phase 0
+# Setup: Phase 0
 
 Target machine for this project: Windows, Python 3.10, NVIDIA RTX 3050 Laptop
 (4 GB VRAM, Ampere / sm_86).
@@ -20,7 +20,7 @@ py -3.10 -m venv .venv
 python -m pip install --upgrade pip
 ```
 
-Confirm you are actually on 3.10 before continuing — this is the most common
+Confirm you are actually on 3.10 before continuing: this is the most common
 setup mistake when several Python versions are installed:
 
 ```bat
@@ -49,7 +49,7 @@ bitsandbytes 4-bit kernels cannot run on it.
 > **This trap fires even if you never type `pip install torch`.** torch is a
 > transitive dependency of transformers, peft, trl and accelerate, so running
 > `pip install -e .` on its own will resolve torch from PyPI and install the
-> CPU wheel. The failure is silent — every package imports fine, and only the
+> CPU wheel. The failure is silent: every package imports fine, and only the
 > 4-bit model load fails, much later and with a confusing error. This is why
 > torch is installed explicitly here, first, rather than left for pip to
 > resolve on its own when installing everything else in step 4.
@@ -61,11 +61,11 @@ explicitly first:
 pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cu130
 ```
 
-Match the index to the driver's CUDA version from step 2 — `cu130` for CUDA
+Match the index to the driver's CUDA version from step 2: `cu130` for CUDA
 13.x, `cu126` for CUDA 12.6+. Both publish Python 3.10 Windows wheels; the
 cu130 wheel is also ~650 MB smaller (1,827 MB vs 2,474 MB).
 
-**On a slow or unreliable connection**, pip cannot resume a partial wheel — it
+**On a slow or unreliable connection**, pip cannot resume a partial wheel: it
 restarts from zero and fails the hash check on truncated bytes. Download with
 a resumable client instead, verify, then install the local file:
 
@@ -91,11 +91,11 @@ Three things that each cost a retry when this was first done:
 - **`curl.exe`, not `curl`.** The bare name is a PowerShell alias for
   `Invoke-WebRequest`, which does not support `-C -` resume.
 - **A `THESE PACKAGES DO NOT MATCH THE HASHES` error is almost always a
-  truncated download,** not tampering — especially if throughput collapsed
+  truncated download,** not tampering, especially if throughput collapsed
   mid-transfer. Verify against the hash published on the index (as above)
   rather than disabling the check.
 
-Verify the CUDA build took — do this before anything else, because every
+Verify the CUDA build took: do this before anything else, because every
 later failure looks different and more confusing than this one:
 
 ```bat
@@ -103,7 +103,7 @@ python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda
 ```
 
 Expected: a version string ending in `+cu130` (or `+cu126`), a CUDA version,
-and `True`. If it prints `+cpu` and `None`, the CPU wheel is installed —
+and `True`. If it prints `+cpu` and `None`, the CPU wheel is installed:
 `pip uninstall -y torch` and repeat this step. Checking
 `.venv\Lib\site-packages\torch\version.py` directly is equally conclusive:
 `cuda: Optional[str] = None` means CPU-only.
@@ -133,7 +133,7 @@ python scripts\phase0_verify_env.py
 
 Optionally add `--train-probe` to also get an early read on training-time
 memory (one LoRA forward+backward). That probe is *not* part of the Phase 0
-pass criteria — see the note in the script — but it de-risks Phase 3 cheaply.
+pass criteria (see the note in the script), but it de-risks Phase 3 cheaply.
 
 ```bat
 python scripts\phase0_verify_env.py --train-probe
@@ -164,7 +164,7 @@ Ordered so the cheapest and most likely failure comes first:
 
 ## Two false passes this is built to avoid
 
-Both of these would make the script report success while proving nothing —
+Both of these would make the script report success while proving nothing,
 which is worse than a clean failure, because the project would be built on top
 of it.
 
@@ -194,7 +194,7 @@ is used, add an entry to [DECISIONS.md](DECISIONS.md) and note it in the
 README, following the same convention as the sibling `heart-disease-mlops`
 compliance work.
 
-### Fallback A — bitsandbytes fails on native Windows → WSL2
+### Fallback A: bitsandbytes fails on native Windows → WSL2
 
 Trigger: check 3 fails (`bitsandbytes_import` or `bitsandbytes_nf4_kernel`).
 
@@ -206,7 +206,7 @@ because the plan identified it as the top platform risk.
 wsl --install -d Ubuntu-22.04     # from an elevated PowerShell, then reboot
 ```
 
-Inside WSL2 the NVIDIA driver is provided by the Windows host — do **not**
+Inside WSL2 the NVIDIA driver is provided by the Windows host, so do **not**
 install an NVIDIA driver inside the Linux guest:
 
 ```bash
@@ -223,7 +223,7 @@ Cost of this fallback: WSL2 reserves host RAM, and reading the dataset across
 `/mnt/c` is slower than a native Linux filesystem. If it is used, move
 `data/` inside the WSL2 filesystem.
 
-### Fallback B — 1.5B does not fit → Qwen2.5-0.5B-Instruct
+### Fallback B: 1.5B does not fit → Qwen2.5-0.5B-Instruct
 
 Trigger: check 4 raises OOM, or check 7 leaves too little headroom for
 training.
@@ -233,11 +233,11 @@ python scripts\phase0_verify_env.py --fallback
 ```
 
 This is a real scope reduction, not a neutral swap: a 0.5B model will produce
-weaker absolute SQL accuracy. The *methodology* — execution-match before/after
-with identical eval code — is unaffected, and that is what the project is
+weaker absolute SQL accuracy. The *methodology* (execution-match before/after
+with identical eval code) is unaffected, and that is what the project is
 demonstrating. Record the reason and the measured numbers that forced it.
 
-### Fallback C — inference fits but training does not
+### Fallback C: inference fits but training does not
 
 Trigger: `--train-probe` OOMs while the plain forward pass passed.
 
@@ -254,8 +254,8 @@ Paste the full console output, or the contents of
 `reports/phase0_env_report.json`. The numbers that matter for the go/no-go
 decision on Phase 1:
 
-- `cuda_available.total_vram_gib` — what the card actually reports
-- `model_load_4bit.weights_vram_gib_device_wide` — cost of the quantised weights
-- `vram_headroom.device_wide_used_gib` / `device_wide_free_gib` — the headroom
-- `forward_pass_loss_sane.loss` — sanity of the quantised weights
-- `train_probe.peak_torch_allocated_gib` — if `--train-probe` was used
+- `cuda_available.total_vram_gib`: what the card actually reports
+- `model_load_4bit.weights_vram_gib_device_wide`: cost of the quantised weights
+- `vram_headroom.device_wide_used_gib` / `device_wide_free_gib`: the headroom
+- `forward_pass_loss_sane.loss`: sanity of the quantised weights
+- `train_probe.peak_torch_allocated_gib`: if `--train-probe` was used

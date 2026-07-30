@@ -9,7 +9,7 @@ a measurement) · **Superseded**.
 
 ---
 
-## D-001 — QLoRA on a 1.5B model, not full fine-tuning
+## D-001: QLoRA on a 1.5B model, not full fine-tuning
 
 **Status:** Decided · **Phase:** 0
 
@@ -21,14 +21,14 @@ preference here, it is arithmetically excluded.
 
 QLoRA resolves this on both axes: the base weights are frozen and quantised to
 4-bit NF4 (~0.5 bytes/param), and gradients plus optimiser states exist only
-for the LoRA adapter — typically well under 1% of parameters.
+for the LoRA adapter, typically well under 1% of parameters.
 
 **Consequence:** the project demonstrates parameter-efficient fine-tuning
 methodology. It cannot make claims about full fine-tuning, and does not.
 
 ---
 
-## D-002 — Qwen2.5-1.5B-Instruct as the base model
+## D-002: Qwen2.5-1.5B-Instruct as the base model
 
 **Status:** Decided · **Phase:** 0
 
@@ -45,7 +45,7 @@ not fit. Recorded in `configs/model.yaml` as `fallback_id`.
 
 ---
 
-## D-003 — Pin `device_map={"": 0}` rather than `"auto"`
+## D-003: Pin `device_map={"": 0}` rather than `"auto"`
 
 **Status:** Decided · **Phase:** 0
 
@@ -62,13 +62,13 @@ to succeed. That is the intent.
 
 ---
 
-## D-004 — Force a real bitsandbytes NF4 kernel round-trip, not just an import
+## D-004: Force a real bitsandbytes NF4 kernel round-trip, not just an import
 
 **Status:** Decided · **Phase:** 0
 
 The build plan flagged flaky native-Windows bitsandbytes support as the top
 platform risk. `import bitsandbytes` succeeding does not establish that the
-compiled CUDA backend works — the failure typically surfaces later, at the
+compiled CUDA backend works: the failure typically surfaces later, at the
 first quantised matmul, after a multi-GB model download.
 
 Phase 0 therefore quantises and dequantises a small tensor on the GPU and
@@ -78,7 +78,7 @@ cause.
 
 ---
 
-## D-005 — Exact version pins, torch installed separately
+## D-005: Exact version pins, torch installed separately
 
 **Status:** Decided · **Phase:** 0
 
@@ -105,7 +105,7 @@ against this pin.
 
 ---
 
-## D-006 — Python 3.10, acknowledged as at end-of-support-window
+## D-006: Python 3.10, acknowledged as at end-of-support-window
 
 **Status:** Decided · **Phase:** 0
 
@@ -121,7 +121,7 @@ maintenance debt, accepted deliberately for a time-boxed portfolio project.
 
 ---
 
-## D-007 — Training-memory probe is not part of the Phase 0 gate
+## D-007: Training-memory probe is not part of the Phase 0 gate
 
 **Status:** Decided · **Phase:** 0
 
@@ -138,7 +138,7 @@ Phase 3 is where training feasibility is genuinely settled.
 
 ---
 
-## D-008 — Take WikiSQL from the canonical release, not a Hugging Face mirror
+## D-008: Take WikiSQL from the canonical release, not a Hugging Face mirror
 
 **Status:** Decided · **Phase:** 1
 
@@ -156,7 +156,7 @@ preprocessed derivative that has dropped the data this project depends on:
 
 Without table rows there is nothing to execute against, and execution match
 is the entire premise. The project therefore downloads
-`https://github.com/salesforce/WikiSQL/raw/master/data.tar.bz2` — the same
+`https://github.com/salesforce/WikiSQL/raw/master/data.tar.bz2`, the same
 archive the official Hugging Face loading script fetches (BSD-3).
 
 Verified after download: 56,355 / 8,421 / 15,878 examples, matching the
@@ -166,7 +166,7 @@ less data.
 
 ---
 
-## D-009 — Rebuild the SQLite tables instead of using the shipped `.db` files
+## D-009: Rebuild the SQLite tables instead of using the shipped `.db` files
 
 **Status:** Decided · **Phase:** 1
 
@@ -179,7 +179,7 @@ CREATE TABLE table_1_10015132_11 (col0 text, col1 text, col2 text, ...)
 
 Columns are anonymised to `col0..colN`. Prompting a model with those reduces
 the task to guessing a column *index*, which is not the task this project
-measures — generating SQL against real, human-readable schemas. Tables are
+measures: generating SQL against real, human-readable schemas. Tables are
 therefore rebuilt from `*.tables.jsonl`, preserving original headers and
 value casing.
 
@@ -188,7 +188,7 @@ rather than inherited.
 
 ---
 
-## D-010 — Declare text columns `COLLATE NOCASE`
+## D-010: Declare text columns `COLLATE NOCASE`
 
 **Status:** Decided · **Phase:** 1 · **Highest-impact decision in Phase 1**
 
@@ -199,13 +199,13 @@ over a random sample of 500 dev examples:
 
 | Column declaration | Ground truth returns a usable result |
 |--------------------|--------------------------------------|
-| `TEXT` (case-sensitive) | 276 / 500 — **55.2%** |
-| `TEXT COLLATE NOCASE`   | 472 / 500 — **94.4%** |
+| `TEXT` (case-sensitive) | 276 / 500, **55.2%** |
+| `TEXT COLLATE NOCASE`   | 472 / 500, **94.4%** |
 
 Case sensitivity alone accounts for ~39 percentage points. Left unaddressed,
 roughly 45% of the reference queries return nothing, and both the baseline and
 the fine-tuned model would be scored against a reference that is broken almost
-half the time — making the headline before/after comparison meaningless.
+half the time, making the headline before/after comparison meaningless.
 
 The official WikiSQL evaluation solves this by lowercasing every stored value.
 Declaring the collation achieves the same matching behaviour while keeping the
@@ -217,7 +217,7 @@ A–Z only. Case differences in non-ASCII text (`Cerro Porteño`) are not folded
 
 ---
 
-## D-011 — Type numeric columns as `REAL`, not `TEXT`
+## D-011: Type numeric columns as `REAL`, not `TEXT`
 
 **Status:** Decided · **Phase:** 1
 
@@ -235,18 +235,18 @@ lossy. A regression test pins the behaviour.
 
 ---
 
-## D-012 — Exclude degenerate ground truth from the evaluation set
+## D-012: Exclude degenerate ground truth from the evaluation set
 
 **Status:** Decided · **Phase:** 1
 
-Roughly **8%** of examples have ground-truth SQL that returns nothing usable —
+Roughly **8%** of examples have ground-truth SQL that returns nothing usable:
 either an empty result set, or a single `NULL` from an aggregate over zero
 matching rows. Measured across 2,000-example samples: 91.6% / 92.1% / 92.5%
 usable for train / dev / test.
 
 These must not appear in the evaluation set. Scoring compares result sets, so
-if the reference answer is "nothing", then *any* query returning nothing —
-including syntactically valid nonsense selecting an unrelated column — scores
+if the reference answer is "nothing", then *any* query returning nothing
+(including syntactically valid nonsense selecting an unrelated column) scores
 as correct. Keeping them would inflate both the baseline and the fine-tuned
 number by rewarding failure, and would do so unevenly between the two.
 
@@ -255,7 +255,7 @@ a non-degenerate result. 500 such examples were drawn from 550 inspected.
 
 ---
 
-## D-013 — Exclude four tables with case-colliding headers
+## D-013: Exclude four tables with case-colliding headers
 
 **Status:** Decided · **Phase:** 1
 
@@ -266,7 +266,7 @@ case is folded.
 
 They are excluded rather than repaired. Repairing means renaming a column,
 which breaks the invariant that a column can be referenced by its real header
-name — the annotation selects columns by *index*, so a renamed column would
+name: the annotation selects columns by *index*, so a renamed column would
 silently resolve to the wrong one.
 
 Exclusion is lossless here: **zero examples in any split reference these four
@@ -275,7 +275,7 @@ a future corpus revision makes the exclusion lossy.
 
 ---
 
-## D-014 — One database per split
+## D-014: One database per split
 
 **Status:** Decided · **Phase:** 1
 
@@ -287,13 +287,13 @@ unambiguous. Materialised sizes: 83.4 / 12.0 / 23.9 MiB.
 
 ---
 
-## D-015 — Stratify the training subsample by query shape
+## D-015: Stratify the training subsample by query shape
 
 **Status:** Decided · **Phase:** 1
 
 The 4 GB GPU makes the full 56K train split impractical in the time budget, so
 training uses a 6,000-example subsample. Sampling is stratified by
-`(aggregation type, condition count)` — the two properties that determine
+`(aggregation type, condition count)`, the two properties that determine
 query difficulty in WikiSQL.
 
 Uniform random sampling would approximate the distribution anyway; stratifying
@@ -305,14 +305,14 @@ Achieved maximum per-stratum drift versus the full train split: **0.0001**.
 
 ---
 
-## D-016 — One evaluation script, not one per phase
+## D-016: One evaluation script, not one per phase
 
 **Status:** Decided · **Phase:** 2
 
 The build plan's central claim is that identical eval code scores the
 baseline and the fine-tuned model. The most reliable way to guarantee that is
 for only one scoring program to exist, so there is no `phase2_eval.py` and no
-`phase4_eval.py` — only `scripts/run_eval.py`, and the sole difference between
+`phase4_eval.py`: only `scripts/run_eval.py`, and the sole difference between
 the runs is a flag:
 
 ```bat
@@ -325,7 +325,7 @@ This makes the guarantee structural rather than a matter of discipline.
 
 ---
 
-## D-017 — Extract SQL from model output before scoring
+## D-017: Extract SQL from model output before scoring
 
 **Status:** Decided · **Phase:** 2
 
@@ -345,7 +345,7 @@ truncate a valid query), and non-read-only statements are rejected outright.
 
 ---
 
-## D-018 — Greedy decoding
+## D-018: Greedy decoding
 
 **Status:** Decided · **Phase:** 2
 
@@ -355,7 +355,7 @@ deterministic and reproducible.
 
 ---
 
-## D-019 — Result-set comparison rules
+## D-019: Result-set comparison rules
 
 **Status:** Decided · **Phase:** 2
 
@@ -363,20 +363,20 @@ Three choices, each of which changes the score:
 
 - **Row order ignored.** No gold query contains `ORDER BY`, so row order has
   no meaning and SQLite does not guarantee it.
-- **Column order significant.** Tuples are compared positionally — selecting
+- **Column order significant.** Tuples are compared positionally: selecting
   different columns is a different answer.
 - **Multiplicity preserved.** Results are compared as sorted lists, not sets:
   returning a row twice is not the same answer as returning it once.
 
 Values are normalised before comparison: ints and floats unify (`COUNT`
-returns `12`, a REAL column returns `12.0` — the same answer), floats compare
+returns `12`, a REAL column returns `12.0`, the same answer), floats compare
 within `1e-6` since `SUM`/`AVG` accumulate representation error, and strings
 are casefolded. Casefolding cannot let a wrong query pass, because result
 casing is determined by the stored data rather than by the model.
 
 ---
 
-## D-020 — Guard against SQLite's double-quoted-string misfeature
+## D-020: Guard against SQLite's double-quoted-string misfeature
 
 **Status:** Decided · **Phase:** 2 · **Caught by the harness self-test**
 
@@ -389,7 +389,7 @@ SELECT [Nope] FROM t   ->  OperationalError: no such column
 SELECT  Nope  FROM t   ->  OperationalError: no such column
 ```
 
-Only the double-quoted form fails silently — and the prompt presents columns
+Only the double-quoted form fails silently, and the prompt presents columns
 double-quoted, so that is the *likely* hallucination shape, not an exotic one.
 
 Measured on the 500-example evaluation set, a prediction that selects a
@@ -412,7 +412,7 @@ since an alias is legitimate and does not change the result set.
 
 ---
 
-## D-021 — The harness self-tests against known-answer inputs
+## D-021: The harness self-tests against known-answer inputs
 
 **Status:** Decided · **Phase:** 2
 
@@ -437,7 +437,7 @@ queries score 100% on execution match and 0% on exact string match.** String
 similarity would have scored 500 semantically perfect queries at zero.
 
 Row 6 is not zero because for ~1.4% of examples the `WHERE` clause does not
-change the result — the condition already matches every row. That is a
+change the result: the condition already matches every row. That is a
 property of the data, not a harness defect.
 
 Writing this self-test is what surfaced D-020, and also surfaced that 117 of
@@ -446,7 +446,7 @@ makes `[...]` quoting unsafe for them.
 
 ---
 
-## D-022 — TRL `SFTTrainer` over a hand-written training loop
+## D-022: TRL `SFTTrainer` over a hand-written training loop
 
 **Status:** Decided · **Phase:** 3
 
@@ -467,12 +467,12 @@ Two findings decided it:
 Every argument passed to `SFTConfig`, `LoraConfig` and
 `prepare_model_for_kbit_training` was checked against the installed source by
 AST inspection before being used. `task_type` is not declared on `LoraConfig`
-itself — it is inherited from `PeftConfig` — which a shallower check would
+itself; it is inherited from `PeftConfig`, which a shallower check would
 have flagged as a false error.
 
 ---
 
-## D-023 — Compute loss on the completion only
+## D-023: Compute loss on the completion only
 
 **Status:** Decided · **Phase:** 3
 
@@ -488,7 +488,7 @@ behaviour is visible in the config instead of inherited silently.
 
 ---
 
-## D-024 — Training and evaluation share one prompt builder
+## D-024: Training and evaluation share one prompt builder
 
 **Status:** Decided · **Phase:** 3 · **Quietest failure mode in the project**
 
@@ -496,8 +496,8 @@ behaviour is visible in the config instead of inherited silently.
 `prompt.build_messages()`. There is one function and two callers.
 
 This matters more than it looks. If the model were fine-tuned on a prompt
-format that differed from the evaluation format — by a system-prompt wording,
-a stray newline, a different schema rendering — then the Phase 4 number would
+format that differed from the evaluation format (by a system-prompt wording,
+a stray newline, a different schema rendering), then the Phase 4 number would
 be a mixture of genuine learning and format mismatch, in an unknown
 proportion and an unknown direction. Nothing in the output would look wrong;
 the number would simply be untrue.
@@ -507,11 +507,11 @@ training prompt, and that the gold SQL never leaks into the prompt side.
 
 ---
 
-## D-025 — Memory settings sized to the *measured* budget
+## D-025: Memory settings sized to the *measured* budget
 
 **Status:** Decided · **Phase:** 3
 
-Phase 0 measured 3.228 GiB free of 4.0 GiB total — roughly 770 MB is consumed
+Phase 0 measured 3.228 GiB free of 4.0 GiB total: roughly 770 MB is consumed
 by the CUDA context, the Windows WDDM reserve and the desktop compositor
 before any model loads. The training budget is therefore ~3.2 GiB, not 4.0,
 and the settings follow from that:
@@ -531,19 +531,19 @@ flags so the fallback needs no code edit.
 
 ---
 
-## D-026 — Sequence lengths are checked before training, not after
+## D-026: Sequence lengths are checked before training, not after
 
 **Status:** Decided · **Phase:** 3
 
 `max_length` truncation is silent. A gold SQL statement cut off at the tail
-would train the model toward incomplete queries, and the symptom — a mediocre
-Phase 4 execution accuracy — gives no hint of the cause. Phase 3 therefore
+would train the model toward incomplete queries, and the symptom (a mediocre
+Phase 4 execution accuracy) gives no hint of the cause. Phase 3 therefore
 measures the token-length distribution against `max_length` first and warns
 before a single step runs.
 
 ---
 
-## D-027 — Held-out smoke examples come from dev, not train or test
+## D-027: Held-out smoke examples come from dev, not train or test
 
 **Status:** Decided · **Phase:** 3
 
@@ -555,7 +555,7 @@ decision (D-002 era) was meant to avoid.
 
 ---
 
-## D-028 — Package as an installable project, not `sys.path` hacks
+## D-028: Package as an installable project, not `sys.path` hacks
 
 **Status:** Decided · **Phase:** repo hygiene, no phase number
 
@@ -583,28 +583,28 @@ argues against elsewhere.
 
 ---
 
-## Resolved — answered by the runs
+## Resolved: answered by the runs
 
-- **P-001 — Does bitsandbytes 4-bit work on native Windows?** **Yes.**
+- **P-001: Does bitsandbytes 4-bit work on native Windows?** **Yes.**
   bitsandbytes 0.50.0 ships an official `win_amd64` wheel and the NF4
   quantise/dequantise round-trip succeeded on GPU (mean absolute
   reconstruction error 0.073, the expected magnitude for NF4 on
   standard-normal input). **The WSL2 fallback was not needed** and remains
   documented in `docs/SETUP.md` only as a contingency.
 
-- **P-002 — Does Qwen2.5-1.5B-Instruct fit in 4-bit within 4 GB?** **Yes,
+- **P-002: Does Qwen2.5-1.5B-Instruct fit in 4-bit within 4 GB?** **Yes,
   comfortably.** 4-bit weights occupy 1.119 GiB; after a forward pass, 2.066
   GiB of 4.0 GiB is in use with 1.933 GiB free, and no parameter was offloaded
-  to CPU. Note the usable budget is ~3.23 GiB rather than 4.0 — the CUDA
+  to CPU. Note the usable budget is ~3.23 GiB rather than 4.0: the CUDA
   context and Windows desktop compositor consume ~770 MB before the model
   loads.
 
-- **P-003 — Is 1.5B viable for training, or is the 0.5B fallback required?**
+- **P-003: Is 1.5B viable for training, or is the 0.5B fallback required?**
   **1.5B is viable at full rank.** Training peaked at 2.628 GiB with rank 16
   across all seven projection modules. **The 0.5B fallback was not needed**,
   and neither were the `--rank 8` or `--attention-only` reductions.
 
-- **P-004 — Pin `model.revision` to a commit SHA.** **Done.** Pinned to
+- **P-004: Pin `model.revision` to a commit SHA.** **Done.** Pinned to
   `989aa7980e4cf806f80c7fef2b1adb7bc71aa306`. The repository's last
   modification is 2024-09-25, well before this project's runs, so that SHA is
   provably the revision the reported results were produced with.
@@ -616,7 +616,7 @@ argues against elsewhere.
   version that nothing reads is worse than no pin, because it looks like a
   guarantee.
 
-- **P-005 — Close the O-001 epoch confound.** **Done.** Re-ran n=200 at 2
+- **P-005: Close the O-001 epoch confound.** **Done.** Re-ran n=200 at 2
   epochs (was 1) via `run_scaling_study.py --sizes 200 1000`, and added an
   n=1,000 point that did not exist before, locating the knee rather than
   interpolating it. Corrected curve: n=200 now captures 82% of the total
@@ -626,15 +626,15 @@ argues against elsewhere.
 
 ---
 
-## Open — deliberately not done
+## Open: deliberately not done
 
-- **O-002 — No dev-set evaluation during training.** Phase 3's gate is a
+- **O-002: No dev-set evaluation during training.** Phase 3's gate is a
   3-example smoke test, which is too small to detect overfitting. Two epochs
   over 6,000 examples on a 1.5B model is unlikely to overfit badly, and the
   held-out test result (85.4%) is evidence it did not, but a per-epoch dev
   evaluation would have made that an observation rather than an inference.
 
-- **O-003 — Single-table only.** WikiSQL has no joins. Spider is the natural
+- **O-003: Single-table only.** WikiSQL has no joins. Spider is the natural
   next step and is a substantially harder task. Scoped as a separate project
   in [issue #6](https://github.com/chinmaynighojkar/wikisql-qlora-execution-eval/issues/6)
   rather than attempted here -- it needs a new data loader, a multi-table
