@@ -38,10 +38,17 @@ from lora_text_to_sql.evaluate import (  # noqa: E402
 )
 from lora_text_to_sql.io import read_jsonl, read_only_connection  # noqa: E402
 from lora_text_to_sql.prompt import build_prompt  # noqa: E402
+from lora_text_to_sql.provenance import capture as capture_provenance  # noqa: E402
 
 EVAL_RECORDS = REPO_ROOT / "data" / "processed" / "test_eval.jsonl"
 TEST_DB = REPO_ROOT / "data" / "tables" / "test.db"
 REPORTS_DIR = REPO_ROOT / "reports"
+
+# Matches the seed used across Phase 1 and Phase 3 (SEED / training.seed).
+# Greedy decoding is already deterministic on its own; seeding here is what
+# keeps that true as a decision rather than an accident of the current
+# decoding strategy.
+DEFAULT_SEED = 20260728
 
 
 # --------------------------------------------------------------------------
@@ -183,7 +190,12 @@ def main() -> int:
     parser.add_argument("--max-new-tokens", type=int, default=128)
     parser.add_argument("--self-test", action="store_true", help="calibrate the harness, no GPU needed")
     parser.add_argument("--predictions-from", default=None, help="re-score saved generations")
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     args = parser.parse_args()
+
+    from lora_text_to_sql.seeding import seed_everything
+
+    seed_everything(args.seed)
 
     records = read_jsonl(EVAL_RECORDS, args.limit)
 
@@ -254,6 +266,7 @@ def main() -> int:
         "n_records": len(records),
         "decoding": {"strategy": "greedy", "max_new_tokens": args.max_new_tokens},
         "generation_seconds": elapsed,
+        "provenance": capture_provenance(REPO_ROOT),
         "metrics": metrics,
     }
 

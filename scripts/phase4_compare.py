@@ -43,6 +43,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from lora_text_to_sql.io import read_json as load_json  # noqa: E402
 from lora_text_to_sql.io import read_jsonl, write_json  # noqa: E402
+from lora_text_to_sql.provenance import capture as capture_provenance  # noqa: E402
 
 REPORTS = REPO_ROOT / "reports"
 PROCESSED = REPO_ROOT / "data" / "processed"
@@ -363,6 +364,10 @@ def main() -> int:
             "baseline": f"{args.baseline}_metrics.json",
             "finetuned": f"{args.finetuned}_metrics.json",
         },
+        # The code state that computed this comparison (mcnemar, wilson_interval)
+        # -- distinct from baseline["provenance"]/finetuned["provenance"], which
+        # record the code state that generated those two runs.
+        "provenance": capture_provenance(REPO_ROOT),
         "n_records": total,
         "baseline": baseline,
         "finetuned": finetuned,
