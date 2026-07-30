@@ -32,6 +32,7 @@ from lora_text_to_sql.dataset import (
     token_length_stats,
 )
 from lora_text_to_sql.evaluate import score_example
+from lora_text_to_sql.generation import load_config
 from lora_text_to_sql.prompt import build_prompt
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -159,7 +160,7 @@ def run_smoke_test(model, tokenizer, holdout: list[dict[str, Any]]) -> list[dict
     return results
 
 
-def main() -> int:
+def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=None, help="use only the first N training records")
     parser.add_argument("--epochs", type=float, default=None, help="override num_train_epochs")
@@ -172,30 +173,15 @@ def main() -> int:
         default=str(REPORT_PATH),
         help="where to write the training report (per-run, so a scaling study does not overwrite)",
     )
-    args = parser.parse_args()
+    return parser
 
-    print("=" * 72)
-    print("Phase 3 gate -- QLoRA fine-tuning")
-    print("=" * 72)
 
-    import torch
-    from peft import LoraConfig, prepare_model_for_kbit_training
-    from trl import SFTConfig, SFTTrainer
-
-    from lora_text_to_sql.generation import load_config, load_model_and_tokenizer
-    from lora_text_to_sql.seeding import seed_everything
-
-    model_config = load_config()
-    train_config = load_yaml(TRAINING_CONFIG)
-    lora_settings = dict(train_config["lora"])
-    settings = dict(train_config["training"])
-    # SFTConfig(seed=...) below covers the trainer, but attaching the LoRA
-    # adapter and any future non-deterministic step (a different sampler, a
-    # random holdout draw) is not automatically inside that scope. Seeding
-    # here once makes reproducibility a decision, not a side effect of the
-    # current configuration.
-    seed_everything(settings["seed"])
-
+def apply_overrides(
+    args: argparse.Namespace, lora_settings: dict[str, Any], settings: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Apply CLI overrides on top of the YAML-configured LoRA/training settings."""
+    lora_settings = dict(lora_settings)
+    settings = dict(settings)
     if args.rank is not None:
         lora_settings["r"] = args.rank
         lora_settings["lora_alpha"] = args.rank * 2
@@ -203,59 +189,21 @@ def main() -> int:
         lora_settings["target_modules"] = ["q_proj", "k_proj", "v_proj", "o_proj"]
     if args.epochs is not None:
         settings["num_train_epochs"] = args.epochs
+    return lora_settings, settings
 
-    # ------------------------------------------------------------------ data
-    section("1. Load the training subsample")
-    if not TRAIN_RECORDS.exists():
-        raise SystemExit(f"{TRAIN_RECORDS} not found. Run scripts/phase1_prepare_data.py first.")
-    records = load_records(TRAIN_RECORDS, args.limit)
-    print(f"  {len(records):,} training records")
 
-    # ----------------------------------------------------------------- model
-    section("2. Load the 4-bit base model")
-    model, tokenizer = load_model_and_tokenizer(model_config)
-    # Batched *generation* needs left padding, but training needs right
-    # padding -- left padding during training would place pad tokens between
-    # the prompt and the labels. load_model_and_tokenizer sets left for the
-    # eval path, so it is corrected here.
-    tokenizer.padding_side = "right"
-    print(f"  loaded {model_config['model']['id']}")
+def resolve_logging_steps(
+    args: argparse.Namespace, settings: dict[str, Any], n_records: int
+) -> tuple[int, int]:
+    """Auto-lower logging_steps on short runs so the loss curve stays measurable.
 
-    section("3. Check sequence lengths against max_length")
-    stats = token_length_stats(tokenizer, records[: min(len(records), 1000)])
-    print(f"  tokens: min={stats['min']} median={stats['median']} p95={stats['p95']} max={stats['max']}")
-    if stats["max"] > settings["max_length"]:
-        over = stats["max"] - settings["max_length"]
-        print(
-            f"  WARNING: longest example exceeds max_length by {over} tokens and "
-            "will be truncated, cutting the tail off its gold SQL."
-        )
-
-    # ------------------------------------------------------------------ lora
-    section("4. Attach the LoRA adapter")
-    model = prepare_model_for_kbit_training(
-        model, use_gradient_checkpointing=settings["gradient_checkpointing"]
-    )
-    model.config.use_cache = False  # incompatible with gradient checkpointing
-
-    peft_config = LoraConfig(**lora_settings)
-    print(f"  rank={lora_settings['r']} alpha={lora_settings['lora_alpha']}")
-    print(f"  targets={lora_settings['target_modules']}")
-
-    # --------------------------------------------------------------- trainer
-    section("5. Train")
-    dataset = build_sft_dataset(records)
-
-    # Ensure the run logs enough points to assess a loss trend. A short smoke
-    # run at the default logging_steps produces a single point, which makes
-    # the Phase 3 gate vacuous -- it once reported FAIL for a run that had
-    # trained perfectly well.
-    effective_batch = (
-        settings["per_device_train_batch_size"] * settings["gradient_accumulation_steps"]
-    )
-    optimizer_steps = max(
-        1, int(len(records) * settings["num_train_epochs"] / effective_batch)
-    )
+    Returns (logging_steps, optimizer_steps). A 200-record smoke run at the
+    default logging_steps produces a single logged point, which makes the
+    Phase 3 loss-trend gate vacuous -- it once reported FAIL for a run that
+    had trained perfectly well.
+    """
+    effective_batch = settings["per_device_train_batch_size"] * settings["gradient_accumulation_steps"]
+    optimizer_steps = max(1, int(n_records * settings["num_train_epochs"] / effective_batch))
     logging_steps = settings["logging_steps"]
     if args.logging_steps is not None:
         logging_steps = args.logging_steps
@@ -266,11 +214,60 @@ def main() -> int:
             f"logging_steps {settings['logging_steps']} -> {logging_steps} so the "
             "loss curve is measurable"
         )
-    settings["logging_steps"] = logging_steps
-    print(f"  effective batch {effective_batch}, ~{optimizer_steps} optimiser steps")
+    return logging_steps, optimizer_steps
 
-    sft_config = SFTConfig(
-        output_dir=str(REPO_ROOT / "models" / "_checkpoints"),
+
+def load_training_records(limit: int | None) -> list[dict[str, Any]]:
+    if not TRAIN_RECORDS.exists():
+        raise SystemExit(f"{TRAIN_RECORDS} not found. Run scripts/phase1_prepare_data.py first.")
+    return load_records(TRAIN_RECORDS, limit)
+
+
+def load_and_prepare_model(model_config: dict[str, Any]):
+    """Load the 4-bit base model, with tokenizer padding corrected for training.
+
+    Batched *generation* needs left padding, but training needs right
+    padding -- left padding during training would place pad tokens between
+    the prompt and the labels. load_model_and_tokenizer sets left for the
+    eval path, so it is corrected here.
+    """
+    from lora_text_to_sql.generation import load_model_and_tokenizer
+
+    model, tokenizer = load_model_and_tokenizer(model_config)
+    tokenizer.padding_side = "right"
+    return model, tokenizer
+
+
+def check_sequence_lengths(tokenizer, records: list[dict[str, Any]], max_length: int) -> dict[str, Any]:
+    stats = token_length_stats(tokenizer, records[: min(len(records), 1000)])
+    print(f"  tokens: min={stats['min']} median={stats['median']} p95={stats['p95']} max={stats['max']}")
+    if stats["max"] > max_length:
+        over = stats["max"] - max_length
+        print(
+            f"  WARNING: longest example exceeds max_length by {over} tokens and "
+            "will be truncated, cutting the tail off its gold SQL."
+        )
+    return stats
+
+
+def attach_lora(model, lora_settings: dict[str, Any], gradient_checkpointing: bool):
+    from peft import LoraConfig, prepare_model_for_kbit_training
+
+    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=gradient_checkpointing)
+    model.config.use_cache = False  # incompatible with gradient checkpointing
+    peft_config = LoraConfig(**lora_settings)
+    print(f"  rank={lora_settings['r']} alpha={lora_settings['lora_alpha']}")
+    print(f"  targets={lora_settings['target_modules']}")
+    return model, peft_config
+
+
+def build_sft_config(settings: dict[str, Any], output_dir: Path, *, bf16: bool) -> Any:
+    """Assemble the SFTConfig. `bf16` is passed in rather than read from
+    `torch.cuda` here, so this assembly can be exercised without a GPU."""
+    from trl import SFTConfig
+
+    return SFTConfig(
+        output_dir=str(output_dir),
         num_train_epochs=settings["num_train_epochs"],
         per_device_train_batch_size=settings["per_device_train_batch_size"],
         gradient_accumulation_steps=settings["gradient_accumulation_steps"],
@@ -286,13 +283,18 @@ def main() -> int:
         save_strategy=settings["save_strategy"],
         seed=settings["seed"],
         packing=settings["packing"],
-        bf16=torch.cuda.get_device_capability()[0] >= 8,
-        fp16=torch.cuda.get_device_capability()[0] < 8,
+        bf16=bf16,
+        fp16=not bf16,
         report_to=[],
         # Prompt-completion datasets default to completion-only loss; stated
         # explicitly so the behaviour is visible rather than inherited.
         completion_only_loss=True,
     )
+
+
+def train_adapter(model, tokenizer, dataset, peft_config, sft_config):
+    import torch
+    from trl import SFTTrainer
 
     trainer = SFTTrainer(
         model=model,
@@ -317,37 +319,58 @@ def main() -> int:
     print(f"\n  trained in {elapsed}s, peak VRAM {peak_gib} GiB")
     if losses:
         print(f"  loss: first={losses[0]:.4f}  last={losses[-1]:.4f}")
+    return trainer, train_result, elapsed, peak_gib, history, losses, trainable, total
 
-    # ------------------------------------------------------------------ save
-    section("6. Save the adapter")
-    output_dir = Path(args.output)
+
+def save_adapter(trainer, tokenizer, output_dir: Path) -> None:
     trainer.model.save_pretrained(output_dir)
     tokenizer.save_pretrained(output_dir)
     print(f"  saved to {output_dir}")
 
-    # ------------------------------------------------------------ smoke test
-    section("7. Smoke test on held-out dev examples")
-    model.config.use_cache = True
-    trainer.model.eval()
-    holdout = build_holdout(train_config["evaluation"]["smoke_test_size"], settings["seed"])
-    smoke = run_smoke_test(trainer.model, tokenizer, holdout)
 
-    # --------------------------------------------------------------- verdict
+def compute_verdict(losses: list[float], smoke: list[dict[str, Any]]) -> dict[str, Any]:
+    """Combine the loss trend and smoke-test results into a pass/fail verdict.
+
+    `loss_decreased is None` means the run was too short to judge -- reported
+    as INDETERMINATE rather than silently counted as either outcome.
+    """
     loss_decreased, trend_detail = assess_loss_trend(losses)
     valid_sql = sum(bool(r["executed"]) for r in smoke)
-    # `loss_decreased is None` means the run was too short to judge -- reported
-    # as INDETERMINATE rather than silently counted as either outcome.
     passed = loss_decreased is True and valid_sql == len(smoke)
-    verdict = (
-        "INDETERMINATE" if loss_decreased is None else ("PASS" if passed else "FAIL")
-    )
+    verdict = "INDETERMINATE" if loss_decreased is None else ("PASS" if passed else "FAIL")
+    return {
+        "loss_decreased": loss_decreased,
+        "trend_detail": trend_detail,
+        "valid_sql": valid_sql,
+        "passed": passed,
+        "verdict": verdict,
+    }
 
+
+def build_training_report(
+    *,
+    model_config: dict[str, Any],
+    lora_settings: dict[str, Any],
+    settings: dict[str, Any],
+    records: list[dict[str, Any]],
+    stats: dict[str, Any],
+    trainable: int,
+    total: int,
+    elapsed: float,
+    peak_gib: float,
+    train_result: Any,
+    losses: list[float],
+    history: list[dict[str, Any]],
+    optimizer_steps: int,
+    verdict: dict[str, Any],
+    smoke: list[dict[str, Any]],
+) -> dict[str, Any]:
     from lora_text_to_sql.provenance import capture as capture_provenance
 
-    report = {
+    return {
         "phase": 3,
         "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "overall_result": verdict,
+        "overall_result": verdict["verdict"],
         "provenance": capture_provenance(REPO_ROOT),
         "model": model_config["model"]["id"],
         "lora": lora_settings,
@@ -362,29 +385,116 @@ def main() -> int:
         "final_train_loss": train_result.training_loss,
         "loss_first": losses[0] if losses else None,
         "loss_last": losses[-1] if losses else None,
-        "loss_decreased": loss_decreased,
-        "loss_trend_detail": trend_detail,
+        "loss_decreased": verdict["loss_decreased"],
+        "loss_trend_detail": verdict["trend_detail"],
         "optimizer_steps": optimizer_steps,
         "logged_loss_points": len(losses),
         "loss_history": history,
         "smoke_test": {
             "n": len(smoke),
-            "produced_executable_sql": valid_sql,
+            "produced_executable_sql": verdict["valid_sql"],
             "execution_matches": sum(bool(r["execution_match"]) for r in smoke),
             "examples": smoke,
         },
     }
+
+
+def main() -> int:
+    args = build_arg_parser().parse_args()
+
+    print("=" * 72)
+    print("Phase 3 gate -- QLoRA fine-tuning")
+    print("=" * 72)
+
+    from lora_text_to_sql.seeding import seed_everything
+
+    model_config = load_config()
+    train_config = load_yaml(TRAINING_CONFIG)
+    lora_settings, settings = apply_overrides(args, train_config["lora"], train_config["training"])
+    # SFTConfig(seed=...) below covers the trainer, but attaching the LoRA
+    # adapter and any future non-deterministic step (a different sampler, a
+    # random holdout draw) is not automatically inside that scope. Seeding
+    # here once makes reproducibility a decision, not a side effect of the
+    # current configuration.
+    seed_everything(settings["seed"])
+
+    # ------------------------------------------------------------------ data
+    section("1. Load the training subsample")
+    records = load_training_records(args.limit)
+    print(f"  {len(records):,} training records")
+
+    # ----------------------------------------------------------------- model
+    section("2. Load the 4-bit base model")
+    model, tokenizer = load_and_prepare_model(model_config)
+    print(f"  loaded {model_config['model']['id']}")
+
+    section("3. Check sequence lengths against max_length")
+    stats = check_sequence_lengths(tokenizer, records, settings["max_length"])
+
+    # ------------------------------------------------------------------ lora
+    section("4. Attach the LoRA adapter")
+    model, peft_config = attach_lora(model, lora_settings, settings["gradient_checkpointing"])
+
+    # --------------------------------------------------------------- trainer
+    section("5. Train")
+    dataset = build_sft_dataset(records)
+    logging_steps, optimizer_steps = resolve_logging_steps(args, settings, len(records))
+    settings["logging_steps"] = logging_steps
+    effective_batch = settings["per_device_train_batch_size"] * settings["gradient_accumulation_steps"]
+    print(f"  effective batch {effective_batch}, ~{optimizer_steps} optimiser steps")
+
+    import torch
+
+    sft_config = build_sft_config(
+        settings,
+        REPO_ROOT / "models" / "_checkpoints",
+        bf16=torch.cuda.get_device_capability()[0] >= 8,
+    )
+    trainer, train_result, elapsed, peak_gib, history, losses, trainable, total = train_adapter(
+        model, tokenizer, dataset, peft_config, sft_config
+    )
+
+    # ------------------------------------------------------------------ save
+    section("6. Save the adapter")
+    save_adapter(trainer, tokenizer, Path(args.output))
+
+    # ------------------------------------------------------------ smoke test
+    section("7. Smoke test on held-out dev examples")
+    model.config.use_cache = True
+    trainer.model.eval()
+    holdout = build_holdout(train_config["evaluation"]["smoke_test_size"], settings["seed"])
+    smoke = run_smoke_test(trainer.model, tokenizer, holdout)
+
+    # --------------------------------------------------------------- verdict
+    verdict = compute_verdict(losses, smoke)
+    report = build_training_report(
+        model_config=model_config,
+        lora_settings=lora_settings,
+        settings=settings,
+        records=records,
+        stats=stats,
+        trainable=trainable,
+        total=total,
+        elapsed=elapsed,
+        peak_gib=peak_gib,
+        train_result=train_result,
+        losses=losses,
+        history=history,
+        optimizer_steps=optimizer_steps,
+        verdict=verdict,
+        smoke=smoke,
+    )
     report_path = Path(args.report)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print("\n" + "=" * 72)
-    print(f"  loss decreased          {loss_decreased}  ({trend_detail})")
-    print(f"  executable SQL          {valid_sql}/{len(smoke)} held-out examples")
-    print(f"PHASE 3: {verdict}")
+    print(f"  loss decreased          {verdict['loss_decreased']}  ({verdict['trend_detail']})")
+    print(f"  executable SQL          {verdict['valid_sql']}/{len(smoke)} held-out examples")
+    print(f"PHASE 3: {verdict['verdict']}")
     print(f"Report written to {report_path}")
     print("=" * 72)
-    return 0 if passed else 1
+    return 0 if verdict["passed"] else 1
 
 
 if __name__ == "__main__":

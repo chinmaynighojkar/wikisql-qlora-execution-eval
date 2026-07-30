@@ -174,11 +174,11 @@ def self_test(records: list[dict[str, Any]], connection: sqlite3.Connection) -> 
 
 
 # --------------------------------------------------------------------------
-# Main evaluation
+# Main evaluation, decomposed so each stage is independently testable
 # --------------------------------------------------------------------------
 
 
-def main() -> int:
+def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--name", default="baseline", help="output name, e.g. baseline / finetuned")
     parser.add_argument("--adapter", default=None, help="path to a trained LoRA adapter (Phase 4)")
@@ -189,7 +189,119 @@ def main() -> int:
     parser.add_argument("--self-test", action="store_true", help="calibrate the harness, no GPU needed")
     parser.add_argument("--predictions-from", default=None, help="re-score saved generations")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    args = parser.parse_args()
+    return parser
+
+
+def load_saved_predictions(path: str, n_records: int) -> list[str]:
+    """Re-score generations saved by a previous run instead of running a model."""
+    saved = json.loads(Path(path).read_text(encoding="utf-8"))
+    outputs = [row["raw_output"] for row in saved]
+    if len(outputs) != n_records:
+        raise SystemExit(
+            f"{len(outputs)} saved generations vs {n_records} records -- mismatch"
+        )
+    return outputs
+
+
+def generate_outputs(
+    records: list[dict[str, Any]], args: argparse.Namespace
+) -> tuple[list[str], float]:
+    """Produce raw model output for every record, or replay saved ones.
+
+    Returns (outputs, generation_seconds); the latter is 0.0 for a replay,
+    since no generation happened.
+    """
+    if args.predictions_from:
+        return load_saved_predictions(args.predictions_from, len(records)), 0.0
+
+    from lora_text_to_sql.generation import (
+        generate_batched,
+        load_config,
+        load_model_and_tokenizer,
+    )
+
+    config = load_config()
+    print("\nLoading model...")
+    model, tokenizer = load_model_and_tokenizer(config, args.adapter, args.model)
+
+    prompts = [build_prompt(tokenizer, record) for record in records]
+    print(f"Generating ({len(prompts)} prompts, batch size {args.batch_size})...")
+    started = time.perf_counter()
+    outputs = list(
+        generate_batched(
+            model,
+            tokenizer,
+            prompts,
+            batch_size=args.batch_size,
+            max_new_tokens=args.max_new_tokens,
+            max_input_tokens=config["runtime"]["max_seq_length"],
+        )
+    )
+    elapsed = round(time.perf_counter() - started, 1)
+    print(f"Generation finished in {elapsed}s")
+    return outputs, elapsed
+
+
+def score_records(records: list[dict[str, Any]], outputs: list[str]) -> list[Any]:
+    """Score every generation against its gold query.
+
+    Read-only connection, always closed: these queries are model-generated,
+    so `mode=ro` is the defence that does not rely on a regex being complete.
+    """
+    with read_only_connection(TEST_DB) as connection:
+        return [
+            score_example(connection, record, output)
+            for record, output in zip(records, outputs)
+        ]
+
+
+def build_report(
+    args: argparse.Namespace, records: list[dict[str, Any]], elapsed: float, metrics: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        "name": args.name,
+        "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "adapter": args.adapter,
+        "model": args.model,
+        "eval_records": str(EVAL_RECORDS.relative_to(REPO_ROOT)),
+        "n_records": len(records),
+        "decoding": {"strategy": "greedy", "max_new_tokens": args.max_new_tokens},
+        "generation_seconds": elapsed,
+        "provenance": capture_provenance(REPO_ROOT),
+        "metrics": metrics,
+    }
+
+
+def write_report(name: str, report: dict[str, Any], results: list[Any]) -> tuple[Path, Path]:
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    metrics_path = REPORTS_DIR / f"{name}_metrics.json"
+    metrics_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+    predictions_path = REPORTS_DIR / f"{name}_predictions.json"
+    predictions_path.write_text(
+        json.dumps([r.as_dict() for r in results], indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return metrics_path, predictions_path
+
+
+def print_summary(metrics: dict[str, Any], metrics_path: Path, predictions_path: Path) -> None:
+    print("\n" + "=" * 72)
+    print(f"  execution accuracy      {metrics['execution_accuracy']:.2%}   <- primary")
+    print(f"  syntactic validity      {metrics['syntactic_validity_rate']:.2%}")
+    print(f"  exact string match      {metrics['exact_match_accuracy']:.2%}   (secondary)")
+    print(f"  SQL extraction rate     {metrics['sql_extraction_rate']:.2%}")
+    if metrics["failure_breakdown"]:
+        print("  failures:")
+        for reason, count in metrics["failure_breakdown"].items():
+            print(f"    {reason:16} {count}")
+    print(f"\n  metrics     -> {metrics_path}")
+    print(f"  predictions -> {predictions_path}")
+    print("=" * 72)
+
+
+def main() -> int:
+    args = build_arg_parser().parse_args()
 
     from lora_text_to_sql.seeding import seed_everything
 
@@ -207,90 +319,15 @@ def main() -> int:
     print(f"  adapter : {args.adapter or 'none (base model)'}")
     print("=" * 72)
 
-    # ------------------------------------------------------------- generate
-    if args.predictions_from:
-        saved = json.loads(Path(args.predictions_from).read_text(encoding="utf-8"))
-        outputs = [row["raw_output"] for row in saved]
-        if len(outputs) != len(records):
-            raise SystemExit(
-                f"{len(outputs)} saved generations vs {len(records)} records -- mismatch"
-            )
-        elapsed = 0.0
-    else:
-        from lora_text_to_sql.generation import (
-            generate_batched,
-            load_config,
-            load_model_and_tokenizer,
-        )
-
-        config = load_config()
-        print("\nLoading model...")
-        model, tokenizer = load_model_and_tokenizer(config, args.adapter, args.model)
-
-        prompts = [build_prompt(tokenizer, record) for record in records]
-        print(f"Generating ({len(prompts)} prompts, batch size {args.batch_size})...")
-        started = time.perf_counter()
-        outputs = list(
-            generate_batched(
-                model,
-                tokenizer,
-                prompts,
-                batch_size=args.batch_size,
-                max_new_tokens=args.max_new_tokens,
-                max_input_tokens=config["runtime"]["max_seq_length"],
-            )
-        )
-        elapsed = round(time.perf_counter() - started, 1)
-        print(f"Generation finished in {elapsed}s")
-
-    # ---------------------------------------------------------------- score
-    # Read-only connection, always closed: these queries are model-generated,
-    # so `mode=ro` is the defence that does not rely on a regex being complete.
-    with read_only_connection(TEST_DB) as connection:
-        results = [
-            score_example(connection, record, output)
-            for record, output in zip(records, outputs)
-        ]
+    outputs, elapsed = generate_outputs(records, args)
+    results = score_records(records, outputs)
     metrics = aggregate_metrics(results)
     metrics["by_condition_count"] = breakdown_by(results, records, "condition_count")
     metrics["by_agg_index"] = breakdown_by(results, records, "agg_index")
 
-    report = {
-        "name": args.name,
-        "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "adapter": args.adapter,
-        "model": args.model,
-        "eval_records": str(EVAL_RECORDS.relative_to(REPO_ROOT)),
-        "n_records": len(records),
-        "decoding": {"strategy": "greedy", "max_new_tokens": args.max_new_tokens},
-        "generation_seconds": elapsed,
-        "provenance": capture_provenance(REPO_ROOT),
-        "metrics": metrics,
-    }
-
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    metrics_path = REPORTS_DIR / f"{args.name}_metrics.json"
-    metrics_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-
-    predictions_path = REPORTS_DIR / f"{args.name}_predictions.json"
-    predictions_path.write_text(
-        json.dumps([r.as_dict() for r in results], indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
-
-    # --------------------------------------------------------------- report
-    print("\n" + "=" * 72)
-    print(f"  execution accuracy      {metrics['execution_accuracy']:.2%}   <- primary")
-    print(f"  syntactic validity      {metrics['syntactic_validity_rate']:.2%}")
-    print(f"  exact string match      {metrics['exact_match_accuracy']:.2%}   (secondary)")
-    print(f"  SQL extraction rate     {metrics['sql_extraction_rate']:.2%}")
-    if metrics["failure_breakdown"]:
-        print("  failures:")
-        for reason, count in metrics["failure_breakdown"].items():
-            print(f"    {reason:16} {count}")
-    print(f"\n  metrics     -> {metrics_path}")
-    print(f"  predictions -> {predictions_path}")
-    print("=" * 72)
+    report = build_report(args, records, elapsed, metrics)
+    metrics_path, predictions_path = write_report(args.name, report, results)
+    print_summary(metrics, metrics_path, predictions_path)
     return 0
 
 
