@@ -11,7 +11,7 @@
       "data": {
         "version": "3.10.0",
         "matches_target_3_10": true,
-        "executable": "C:\\Projects\\lora-text-to-sql\\.venv\\Scripts\\python.exe"
+        "executable": ".venv\\Scripts\\python.exe"
       }
     },
     {

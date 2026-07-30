@@ -42,3 +42,8 @@ Thumbs.db
 # Coverage (pytest --cov leaves this behind; reports/ carries the numbers
 # that matter, this is just the raw sqlite trace pytest-cov reads from)
 .coverage
+
+# Job-search material. This is candidate-facing interview prep (rehearsed
+# answers, resume-bullet strategy notes), not project documentation -- it
+# doesn't belong in a public repo even though every claim in it is accurate.
+docs/RESUME_BULLETS.md
