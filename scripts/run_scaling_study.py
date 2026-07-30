@@ -40,6 +40,10 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from lora_text_to_sql.provenance import capture as capture_provenance  # noqa: E402
+
 REPORTS = REPO_ROOT / "reports"
 MODELS = REPO_ROOT / "models"
 PYTHON = sys.executable
@@ -163,6 +167,7 @@ def aggregate(sizes: list[int]) -> dict[str, Any]:
 
     return {
         "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "provenance": capture_provenance(REPO_ROOT),
         "eval_records": baseline["n_records"],
         "note": (
             "Epochs held constant while training-set size varies, so optimiser "

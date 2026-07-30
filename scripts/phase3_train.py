@@ -184,11 +184,18 @@ def main() -> int:
     from trl import SFTConfig, SFTTrainer
 
     from lora_text_to_sql.generation import load_config, load_model_and_tokenizer
+    from lora_text_to_sql.seeding import seed_everything
 
     model_config = load_config()
     train_config = load_yaml(TRAINING_CONFIG)
     lora_settings = dict(train_config["lora"])
     settings = dict(train_config["training"])
+    # SFTConfig(seed=...) below covers the trainer, but attaching the LoRA
+    # adapter and any future non-deterministic step (a different sampler, a
+    # random holdout draw) is not automatically inside that scope. Seeding
+    # here once makes reproducibility a decision, not a side effect of the
+    # current configuration.
+    seed_everything(settings["seed"])
 
     if args.rank is not None:
         lora_settings["r"] = args.rank
@@ -336,10 +343,13 @@ def main() -> int:
         "INDETERMINATE" if loss_decreased is None else ("PASS" if passed else "FAIL")
     )
 
+    from lora_text_to_sql.provenance import capture as capture_provenance
+
     report = {
         "phase": 3,
         "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "overall_result": verdict,
+        "provenance": capture_provenance(REPO_ROOT),
         "model": model_config["model"]["id"],
         "lora": lora_settings,
         "training": settings,
