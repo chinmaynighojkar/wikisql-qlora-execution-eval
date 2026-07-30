@@ -14,6 +14,7 @@ Only the model pointer differs between those runs -- see `scripts/run_eval.py`.
 
 from __future__ import annotations
 
+import math
 import re
 import sqlite3
 import time
@@ -184,29 +185,72 @@ def execute_guarded(
 # --------------------------------------------------------------------------
 
 
+def _is_number(value: Any) -> bool:
+    """True for real numbers. `bool` is excluded: it subclasses `int`, and
+    treating `True` as `1.0` would silently equate a flag with a count."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
 def _normalize_value(value: Any) -> Any:
     """Canonicalise one cell for comparison.
 
-    - Numbers unify across int/float: `COUNT` returns `12`, a REAL column
-      returns `12.0`, and those are the same answer.
-    - Strings are casefolded and whitespace-stripped. The official WikiSQL
-      evaluation lowercases all values for the same reason; result casing is
-      determined by the stored data rather than by the model, so this cannot
-      let a wrong query pass.
+    Numbers are left as floats -- unifying int and float, so `COUNT`'s `12`
+    and a REAL column's `12.0` are the same answer -- but deliberately *not*
+    rounded here. Rounding into buckets is not a tolerance: two values closer
+    together than the tolerance can straddle a bucket boundary and compare
+    unequal. Numeric closeness is applied pairwise in `_values_equal`.
+
+    Strings are casefolded and whitespace-collapsed. The official WikiSQL
+    evaluation lowercases all values for the same reason; result casing is
+    determined by the stored data rather than by the model, so this cannot let
+    a wrong query pass.
     """
     if value is None:
         return None
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)):
-        number = float(value)
-        # Round to the tolerance so near-identical floats hash identically.
-        return round(number / FLOAT_TOLERANCE) * FLOAT_TOLERANCE
+    if _is_number(value):
+        return float(value)
     return " ".join(str(value).split()).casefold()
 
 
 def normalize_result(rows: Sequence[Sequence[Any]]) -> list[tuple[Any, ...]]:
     return [tuple(_normalize_value(v) for v in row) for row in rows]
+
+
+def _values_equal(left: Any, right: Any) -> bool:
+    """Compare two normalised cells, with a genuine numeric tolerance.
+
+    `rel_tol` handles large magnitudes (WikiSQL contains values like
+    339333.011497678, where an absolute 1e-6 would be punishingly strict) and
+    `abs_tol` handles values near zero, where a relative tolerance is useless.
+    """
+    if left is None or right is None:
+        return left is None and right is None
+    left_num, right_num = _is_number(left), _is_number(right)
+    if left_num != right_num:
+        # A number and a string are different answers -- typically the model
+        # selected a different column.
+        return False
+    if left_num:
+        return math.isclose(left, right, rel_tol=1e-9, abs_tol=FLOAT_TOLERANCE)
+    return left == right
+
+
+def _sort_key(row: Sequence[Any]) -> tuple:
+    """Order rows deterministically for positional comparison.
+
+    Numbers are bucketed *here only*, so values within the tolerance sort
+    adjacently and line up for the pairwise check. The bucketing never decides
+    equality -- `_values_equal` does.
+    """
+    key = []
+    for value in row:
+        if value is None:
+            key.append((0, 0.0, ""))
+        elif _is_number(value):
+            key.append((1, round(value / FLOAT_TOLERANCE) * FLOAT_TOLERANCE, ""))
+        else:
+            key.append((2, 0.0, str(value)))
+    return tuple(key)
 
 
 def results_match(gold: Sequence[Sequence[Any]], predicted: Sequence[Sequence[Any]]) -> bool:
@@ -217,15 +261,17 @@ def results_match(gold: Sequence[Sequence[Any]], predicted: Sequence[Sequence[An
     it. Column order *is* significant: selecting different columns is a
     different answer, so tuples are compared positionally.
 
-    Multiplicity is preserved (sorted list, not a set) -- returning a row
-    twice is not the same answer as returning it once.
+    Multiplicity is preserved (sorted lists, not sets) -- returning a row twice
+    is not the same answer as returning it once.
     """
-    left = normalize_result(gold)
-    right = normalize_result(predicted)
+    left = sorted(normalize_result(gold), key=_sort_key)
+    right = sorted(normalize_result(predicted), key=_sort_key)
     if len(left) != len(right):
         return False
-    key = lambda row: tuple((v is None, str(v)) for v in row)  # noqa: E731
-    return sorted(left, key=key) == sorted(right, key=key)
+    return all(
+        len(a) == len(b) and all(_values_equal(x, y) for x, y in zip(a, b))
+        for a, b in zip(left, right)
+    )
 
 
 # --------------------------------------------------------------------------

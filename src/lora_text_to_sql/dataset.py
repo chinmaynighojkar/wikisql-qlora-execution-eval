@@ -25,20 +25,16 @@ definitions that are given at inference time anyway.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
+from .io import read_jsonl
 from .prompt import build_messages
 
 
 def load_records(path: Path, limit: int | None = None) -> list[dict[str, Any]]:
-    records = [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
-    return records[:limit] if limit else records
+    """Thin alias kept for call-site readability; see `io.read_jsonl`."""
+    return read_jsonl(path, limit)
 
 
 def to_sft_example(record: dict[str, Any]) -> dict[str, list[dict[str, str]]]:
