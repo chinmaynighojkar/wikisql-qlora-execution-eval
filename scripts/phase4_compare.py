@@ -74,11 +74,15 @@ def mcnemar(before: list[dict], after: list[dict], key: str = "execution_match")
 
     discordant = fixed + broken
     if discordant == 0:
-        return {"fixed": 0, "broken": 0, "both_correct": both, "both_wrong": neither,
-                "chi_square": 0.0, "p_value": 1.0, "significant_at_0_01": False}
-
-    chi_square = (abs(fixed - broken) - 1) ** 2 / discordant
-    p_value = math.erfc(math.sqrt(chi_square) / math.sqrt(2))
+        # No discordant pairs to test -- reported through the same schema as
+        # the normal path below, not a shorter dict, so render_markdown()
+        # (which reads fixed_by_finetuning / chi_square_continuity_corrected /
+        # p_value_display unconditionally) does not crash on this case.
+        chi_square = 0.0
+        p_value = 1.0
+    else:
+        chi_square = (abs(fixed - broken) - 1) ** 2 / discordant
+        p_value = math.erfc(math.sqrt(chi_square) / math.sqrt(2))
     return {
         "fixed_by_finetuning": fixed,
         "broken_by_finetuning": broken,

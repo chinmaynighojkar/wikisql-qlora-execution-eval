@@ -75,6 +75,30 @@ def section(title: str) -> None:
 # --------------------------------------------------------------------------
 
 
+def _assert_safe_members(tar: tarfile.TarFile, destination: Path) -> None:
+    """Reject any archive member that would extract outside `destination`.
+
+    tarfile.extractall() has no built-in defence against a member path
+    containing "../" or an absolute path (a CVE-2007-4559-class issue); the
+    safe `filter="data"` option that closes this is Python 3.12+ only, and
+    this project targets 3.10 (D-006). The archive comes from a fixed,
+    trusted URL, so this is cheap defence-in-depth rather than a response to
+    an observed problem: it costs nothing and means a compromised upstream
+    (or a substituted URL) can't silently write files outside RAW_DIR.
+    """
+    destination = destination.resolve()
+    for member in tar.getmembers():
+        resolved = (destination / member.name).resolve()
+        if resolved != destination and destination not in resolved.parents:
+            raise SystemExit(f"refusing to extract {member.name!r}: escapes {destination}")
+        if member.issym() or member.islnk():
+            link_target = (resolved.parent / member.linkname).resolve()
+            if link_target != destination and destination not in link_target.parents:
+                raise SystemExit(
+                    f"refusing to extract {member.name!r}: link target escapes {destination}"
+                )
+
+
 def ensure_raw_data(force: bool = False) -> Path:
     section("1. Acquire the official WikiSQL release")
     extracted = RAW_DIR / "data"
@@ -94,6 +118,7 @@ def ensure_raw_data(force: bool = False) -> Path:
 
     print("  extracting")
     with tarfile.open(archive, "r:bz2") as tar:
+        _assert_safe_members(tar, RAW_DIR)
         tar.extractall(RAW_DIR)
     return extracted
 
