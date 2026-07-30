@@ -606,4 +606,8 @@ decision (D-002 era) was meant to avoid.
   evaluation would have made that an observation rather than an inference.
 
 - **O-003 — Single-table only.** WikiSQL has no joins. Spider is the natural
-  next step and is a substantially harder task.
+  next step and is a substantially harder task. Scoped as a separate project
+  in [issue #6](https://github.com/chinmaynighojkar/wikisql-qlora-execution-eval/issues/6)
+  rather than attempted here -- it needs a new data loader, a multi-table
+  identifier guard, and a re-verified VRAM budget for longer prompts, not a
+  quick extension of this pipeline.
