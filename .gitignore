@@ -38,3 +38,7 @@ models/*
 Thumbs.db
 .idea/
 .vscode/
+
+# Coverage (pytest --cov leaves this behind; reports/ carries the numbers
+# that matter, this is just the raw sqlite trace pytest-cov reads from)
+.coverage

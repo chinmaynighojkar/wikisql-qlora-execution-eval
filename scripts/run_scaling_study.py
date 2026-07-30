@@ -65,11 +65,12 @@ def run(command: list[str], label: str) -> None:
     print(f"\n{'=' * 72}\n{label}\n{'=' * 72}")
     print("  $ " + " ".join(command[1:]))
     started = time.perf_counter()
-    result = subprocess.run(command, cwd=REPO_ROOT)
+    # check=False deliberately: Phase 3 exits non-zero on FAIL/INDETERMINATE,
+    # which is a verdict about the run rather than a crash, so it is reported
+    # and tolerated here rather than raised.
+    result = subprocess.run(command, cwd=REPO_ROOT, check=False)
     elapsed = time.perf_counter() - started
     if result.returncode != 0:
-        # Phase 3 exits non-zero on FAIL/INDETERMINATE, which is a verdict about
-        # the run rather than a crash, so it is reported and tolerated here.
         print(f"  (exit code {result.returncode} after {elapsed / 60:.1f} min)")
     else:
         print(f"  completed in {elapsed / 60:.1f} min")

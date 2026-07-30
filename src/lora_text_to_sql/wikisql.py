@@ -14,9 +14,10 @@ Source: the official release, https://github.com/salesforce/WikiSQL (BSD-3),
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 # Index -> SQL keyword, fixed by the WikiSQL annotation format.
 AGG_OPS: tuple[str, ...] = ("", "MAX", "MIN", "COUNT", "SUM", "AVG")
@@ -101,7 +102,7 @@ class WikiSQLTable:
         return self.types[column_index] == "real"
 
     @classmethod
-    def from_json(cls, payload: dict[str, Any]) -> "WikiSQLTable":
+    def from_json(cls, payload: dict[str, Any]) -> WikiSQLTable:
         return cls(
             id=payload["id"],
             header=list(payload["header"]),
@@ -120,7 +121,7 @@ class WikiSQLExample:
     conditions: list[tuple[int, int, Any]]
 
     @classmethod
-    def from_json(cls, payload: dict[str, Any]) -> "WikiSQLExample":
+    def from_json(cls, payload: dict[str, Any]) -> WikiSQLExample:
         sql = payload["sql"]
         return cls(
             table_id=payload["table_id"],

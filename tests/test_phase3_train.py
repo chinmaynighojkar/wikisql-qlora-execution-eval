@@ -10,6 +10,7 @@ model. These stages are pure, so they can be tested without either.
 import importlib.util
 import sys
 from pathlib import Path
+from typing import Any, ClassVar
 
 import pytest
 
@@ -45,8 +46,8 @@ class TestArgParser:
 
 
 class TestApplyOverrides:
-    LORA = {"r": 16, "lora_alpha": 32, "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}
-    SETTINGS = {"num_train_epochs": 2}
+    LORA: ClassVar[dict[str, Any]] = {"r": 16, "lora_alpha": 32, "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}
+    SETTINGS: ClassVar[dict[str, Any]] = {"num_train_epochs": 2}
 
     def test_no_overrides_leaves_settings_unchanged(self):
         lora, settings = phase3.apply_overrides(_args(), self.LORA, self.SETTINGS)
@@ -75,7 +76,7 @@ class TestApplyOverrides:
 
 
 class TestResolveLoggingSteps:
-    SETTINGS = {
+    SETTINGS: ClassVar[dict[str, Any]] = {
         "per_device_train_batch_size": 1,
         "gradient_accumulation_steps": 16,
         "logging_steps": 10,

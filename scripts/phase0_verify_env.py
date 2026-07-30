@@ -34,7 +34,7 @@ import json
 import platform
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -334,7 +334,7 @@ def load_model_4bit(report: Report, config: dict[str, Any], model_id: str, suppo
         return None, None
 
     load_seconds = round(time.perf_counter() - started, 1)
-    free_after, total = torch.cuda.mem_get_info()
+    free_after, _total = torch.cuda.mem_get_info()
 
     report.add(
         "model_load_4bit",

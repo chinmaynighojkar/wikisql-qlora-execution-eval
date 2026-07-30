@@ -36,3 +36,14 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+# The GPU stack (torch, transformers, peft, trl, bitsandbytes, accelerate,
+# datasets) ships no bundled type stubs mypy can find without installing the
+# real ~2 GB packages, which CI deliberately does not do (see ci.yml). This
+# is a stub-availability gap, not a signal to skip checking these modules.
+ignore_missing_imports = true
