@@ -18,8 +18,9 @@ import math
 import re
 import sqlite3
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Sequence
+from typing import Any
 
 from .extraction import ExtractionError, extract_sql, normalize_for_exact_match
 

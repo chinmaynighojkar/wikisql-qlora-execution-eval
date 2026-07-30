@@ -27,7 +27,6 @@ import sys
 import tarfile
 import time
 import urllib.request
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -111,7 +110,7 @@ def ensure_raw_data(force: bool = False) -> Path:
     if not archive.exists() or force:
         print(f"  downloading {DATA_URL}")
         started = time.perf_counter()
-        urllib.request.urlretrieve(DATA_URL, archive)  # noqa: S310 - fixed, known URL
+        urllib.request.urlretrieve(DATA_URL, archive)
         size_mib = archive.stat().st_size / 1024**2
         print(f"  downloaded {size_mib:.1f} MiB in {time.perf_counter() - started:.1f}s")
 

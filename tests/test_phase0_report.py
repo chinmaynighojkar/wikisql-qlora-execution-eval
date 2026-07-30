@@ -46,7 +46,7 @@ class TestReportAdd:
         """`report.add("x", True, "y", **{"name": ...})` raised
         `TypeError: got multiple values for argument 'name'`."""
         report = phase0.Report()
-        report.add("cuda_available", True, "detail", **{"name": "RTX 3050"})
+        report.add("cuda_available", True, "detail", name="RTX 3050")
         assert report.checks[0].name == "cuda_available"
         assert report.checks[0].data["name"] == "RTX 3050"
 
@@ -182,7 +182,7 @@ class TestCheckTorchAndGpu:
         transitive dependency, where `torch.version.cuda` is None."""
         fake_torch(cuda_build=None)
         report = phase0.Report()
-        torch, gpu_info = phase0.check_torch_and_gpu(report)
+        _torch, gpu_info = phase0.check_torch_and_gpu(report)
 
         assert not report.ok
         assert gpu_info == {}

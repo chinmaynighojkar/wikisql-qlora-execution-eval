@@ -14,7 +14,8 @@ quoting the obvious continuation rather than something the model must infer.
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 SYSTEM_PROMPT = (
     "You are an expert at writing SQLite queries. "

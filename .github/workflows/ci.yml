@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# Every job installs the package with --no-deps, then adds only the
+# lightweight tools actually needed. pyproject.toml's real dependencies
+# (transformers, peft, trl, bitsandbytes, accelerate, datasets) all pull in
+# torch transitively -- a ~2 GB CUDA-relevant download that CI has no GPU to
+# use anyway. src/lora_text_to_sql's own modules only need PyYAML at import
+# time (lora_text_to_sql.generation.load_config); nothing that runs here
+# touches torch, so none of it is installed.
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install the package and lint/type tools (no GPU stack)
+        run: |
+          pip install -e . --no-deps
+          pip install PyYAML==6.0.2 ruff mypy
+
+      - name: ruff
+        run: ruff check src scripts tests
+
+      - name: mypy
+        run: mypy src scripts
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install the package and test tools (no GPU stack)
+        run: |
+          pip install -e . --no-deps
+          pip install PyYAML==6.0.2 pytest==8.3.4 pytest-cov
+
+      - name: pytest with coverage floor
+        run: |
+          pytest --cov=src --cov-report=term-missing --cov-fail-under=80
+
+  harness-calibration:
+    # Materialises the real WikiSQL corpus and scores known-answer inputs
+    # against it, asserting the harness reports the correct result for each.
+    # This guards the scoring logic every headline number in the README
+    # depends on -- and, like the jobs above, needs no GPU: --self-test never
+    # loads a model.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install the package (no GPU stack)
+        run: |
+          pip install -e . --no-deps
+          pip install PyYAML==6.0.2
+
+      - name: Materialise WikiSQL and validate ground truth
+        run: python scripts/phase1_prepare_data.py --validate-sample 500 --eval-size 200
+
+      - name: Calibrate the execution-match harness
+        run: python scripts/run_eval.py --self-test

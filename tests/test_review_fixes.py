@@ -184,8 +184,7 @@ class TestSharedIO:
         )
         materialize_split([table], tmp)
         try:
-            with read_only_connection(tmp) as conn:
-                with pytest.raises(sqlite3.OperationalError):
-                    conn.execute('DELETE FROM "t"')
+            with read_only_connection(tmp) as conn, pytest.raises(sqlite3.OperationalError):
+                conn.execute('DELETE FROM "t"')
         finally:
             tmp.unlink(missing_ok=True)

@@ -329,12 +329,15 @@ Stated up front rather than discovered later.
 ## Repository layout
 
 ```
-configs/     model.yaml (shared by every phase), training.yaml
-scripts/     phase0_verify_env, phase1_prepare_data, run_eval,
-             phase3_train, phase4_compare, run_scaling_study
-src/         wikisql, materialize, prompt, dataset, extraction,
-             evaluate, generation
-tests/       139 tests
-reports/     metrics, comparison.md, scaling_curve.md (committed)
-docs/        SETUP.md, DECISIONS.md, RESUME_BULLETS.md
+configs/          model.yaml (shared by every phase), training.yaml
+scripts/          phase0_verify_env, phase1_prepare_data, run_eval,
+                  phase3_train, phase4_compare, run_scaling_study
+src/              wikisql, materialize, prompt, dataset, extraction,
+                  evaluate, generation, io, provenance, seeding
+tests/            204 tests
+reports/          metrics, comparison.md, scaling_curve.md (committed)
+docs/             SETUP.md, DECISIONS.md, RESUME_BULLETS.md
+pyproject.toml    pip install -e . -- no sys.path hacks (D-028)
+.github/workflows/  CI: ruff, mypy, pytest --cov (80% floor), harness
+                  calibration against real WikiSQL data -- all GPU-free
 ```

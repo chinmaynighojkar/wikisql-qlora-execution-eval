@@ -43,7 +43,8 @@ class TestCapture:
         import sys
 
         result = capture(REPO_ROOT)
-        assert result["python_version"] == "%d.%d.%d" % sys.version_info[:3]
+        major, minor, micro = sys.version_info[:3]
+        assert result["python_version"] == f"{major}.{minor}.{micro}"
 
 
 class TestPackageVersions:

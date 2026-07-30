@@ -9,8 +9,9 @@ apples-to-apples rather than a matter of discipline.
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Any, Iterator, Sequence
+from typing import Any
 
 import yaml
 
@@ -59,7 +60,10 @@ def load_model_and_tokenizer(
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(
+    # Annotated Any: the returned model is a PeftModel when an adapter is
+    # attached and the bare base model otherwise -- a real union of dynamic
+    # transformers/peft types not worth modelling precisely here.
+    model: Any = AutoModelForCausalLM.from_pretrained(
         resolved_id,
         revision=revision,
         quantization_config=bnb_config,

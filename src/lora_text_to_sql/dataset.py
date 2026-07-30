@@ -25,8 +25,9 @@ definitions that are given at inference time anyway.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 from .io import read_jsonl
 from .prompt import build_messages
