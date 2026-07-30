@@ -38,12 +38,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "src"))
+from lora_text_to_sql.io import read_json as load_json
+from lora_text_to_sql.io import read_jsonl, write_json
+from lora_text_to_sql.provenance import capture as capture_provenance
 
-from lora_text_to_sql.io import read_json as load_json  # noqa: E402
-from lora_text_to_sql.io import read_jsonl, write_json  # noqa: E402
-from lora_text_to_sql.provenance import capture as capture_provenance  # noqa: E402
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 REPORTS = REPO_ROOT / "reports"
 PROCESSED = REPO_ROOT / "data" / "processed"

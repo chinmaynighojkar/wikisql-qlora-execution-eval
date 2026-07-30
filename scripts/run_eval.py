@@ -28,18 +28,16 @@ import time
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "src"))
-
-from lora_text_to_sql.evaluate import (  # noqa: E402
+from lora_text_to_sql.evaluate import (
     aggregate_metrics,
     breakdown_by,
     score_example,
 )
-from lora_text_to_sql.io import read_jsonl, read_only_connection  # noqa: E402
-from lora_text_to_sql.prompt import build_prompt  # noqa: E402
-from lora_text_to_sql.provenance import capture as capture_provenance  # noqa: E402
+from lora_text_to_sql.io import read_jsonl, read_only_connection
+from lora_text_to_sql.prompt import build_prompt
+from lora_text_to_sql.provenance import capture as capture_provenance
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
 EVAL_RECORDS = REPO_ROOT / "data" / "processed" / "test_eval.jsonl"
 TEST_DB = REPO_ROOT / "data" / "tables" / "test.db"
 REPORTS_DIR = REPO_ROOT / "reports"

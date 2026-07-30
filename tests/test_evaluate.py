@@ -1,22 +1,18 @@
 """Tests for execution-match scoring."""
 
 import sqlite3
-import sys
-from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-
-from lora_text_to_sql.evaluate import (  # noqa: E402
+from lora_text_to_sql.evaluate import (
     QueryTimeout,
     aggregate_metrics,
     execute_guarded,
     results_match,
     score_example,
 )
-from lora_text_to_sql.materialize import materialize_split  # noqa: E402
-from lora_text_to_sql.wikisql import WikiSQLTable  # noqa: E402
+from lora_text_to_sql.materialize import materialize_split
+from lora_text_to_sql.wikisql import WikiSQLTable
 
 
 @pytest.fixture

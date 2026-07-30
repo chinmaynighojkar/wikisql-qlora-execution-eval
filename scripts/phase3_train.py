@@ -26,16 +26,15 @@ import time
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "src"))
-
-from lora_text_to_sql.dataset import (  # noqa: E402
+from lora_text_to_sql.dataset import (
     build_sft_dataset,
     load_records,
     token_length_stats,
 )
-from lora_text_to_sql.evaluate import score_example  # noqa: E402
-from lora_text_to_sql.prompt import build_prompt  # noqa: E402
+from lora_text_to_sql.evaluate import score_example
+from lora_text_to_sql.prompt import build_prompt
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 TRAIN_RECORDS = REPO_ROOT / "data" / "processed" / "train_subsample.jsonl"
 DEV_DB = REPO_ROOT / "data" / "tables" / "dev.db"

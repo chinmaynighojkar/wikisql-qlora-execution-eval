@@ -6,14 +6,9 @@ manufactures an improvement fine-tuning did not earn; extraction that is too
 loose invents queries the model did not produce. Both directions are tested.
 """
 
-import sys
-from pathlib import Path
-
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-
-from lora_text_to_sql.extraction import (  # noqa: E402
+from lora_text_to_sql.extraction import (
     ExtractionError,
     extract_sql,
     normalize_for_exact_match,

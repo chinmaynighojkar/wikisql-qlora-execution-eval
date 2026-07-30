@@ -48,13 +48,11 @@ bitsandbytes 4-bit kernels cannot run on it.
 
 > **This trap fires even if you never type `pip install torch`.** torch is a
 > transitive dependency of transformers, peft, trl and accelerate, so running
-> `pip install -r requirements.txt` on its own will resolve torch from PyPI
-> and install the CPU wheel. The failure is silent — every package imports
-> fine, and only the 4-bit model load fails, much later and with a confusing
-> error. This happened once during setup here, which is why `requirements.txt`
-> now pins `torch==2.13.0+cu130` with an `--extra-index-url` rather than
-> omitting torch: an omitted dependency is resolved by pip, a pinned local
-> version is not.
+> `pip install -e .` on its own will resolve torch from PyPI and install the
+> CPU wheel. The failure is silent — every package imports fine, and only the
+> 4-bit model load fails, much later and with a confusing error. This is why
+> torch is installed explicitly here, first, rather than left for pip to
+> resolve on its own when installing everything else in step 4.
 
 With the pin in place, step 4 installs the correct build on its own. To do it
 explicitly first:
@@ -113,7 +111,18 @@ and `True`. If it prints `+cpu` and `None`, the CPU wheel is installed —
 ## 4. Install the rest
 
 ```bat
-pip install -r requirements.txt
+pip install -e .
+```
+
+Installs the project itself (editable) along with the pinned dependencies in
+`pyproject.toml`. Editable means `import lora_text_to_sql` resolves to
+`src/lora_text_to_sql` directly, so there is no `sys.path` hack anywhere in
+the scripts or tests (D-028).
+
+For development (linting, type checking, coverage), add the `dev` extra:
+
+```bat
+pip install -e ".[dev]"
 ```
 
 ## 5. Run the Phase 0 gate
@@ -206,7 +215,7 @@ cd /mnt/c/Projects/lora-text-to-sql
 python3.10 -m venv .venv-wsl
 source .venv-wsl/bin/activate
 pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cu126
-pip install -r requirements.txt
+pip install -e .
 python scripts/phase0_verify_env.py
 ```
 

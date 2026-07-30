@@ -13,11 +13,10 @@ from pathlib import Path
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "src"))
+from lora_text_to_sql.evaluate import FLOAT_TOLERANCE, results_match
+from lora_text_to_sql.io import read_json, read_jsonl, read_only_connection
 
-from lora_text_to_sql.evaluate import FLOAT_TOLERANCE, results_match  # noqa: E402
-from lora_text_to_sql.io import read_json, read_jsonl, read_only_connection  # noqa: E402
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_phase4():

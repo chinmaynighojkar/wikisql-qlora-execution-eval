@@ -17,7 +17,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
-# The packages whose exact versions D-005 already pins in requirements.txt,
+# The packages whose exact versions D-005 already pins in pyproject.toml,
 # because those are the ones a mid-project upgrade could shift results for
 # reasons unrelated to fine-tuning.
 _TRACKED_PACKAGES = (
