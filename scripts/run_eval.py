@@ -36,20 +36,12 @@ from lora_text_to_sql.evaluate import (  # noqa: E402
     breakdown_by,
     score_example,
 )
+from lora_text_to_sql.io import read_jsonl, read_only_connection  # noqa: E402
 from lora_text_to_sql.prompt import build_prompt  # noqa: E402
 
 EVAL_RECORDS = REPO_ROOT / "data" / "processed" / "test_eval.jsonl"
 TEST_DB = REPO_ROOT / "data" / "tables" / "test.db"
 REPORTS_DIR = REPO_ROOT / "reports"
-
-
-def load_records(path: Path, limit: int | None = None) -> list[dict[str, Any]]:
-    if not path.exists():
-        raise SystemExit(
-            f"{path} not found. Run scripts/phase1_prepare_data.py first."
-        )
-    records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
-    return records[:limit] if limit else records
 
 
 # --------------------------------------------------------------------------
@@ -193,13 +185,11 @@ def main() -> int:
     parser.add_argument("--predictions-from", default=None, help="re-score saved generations")
     args = parser.parse_args()
 
-    records = load_records(EVAL_RECORDS, args.limit)
-    if not TEST_DB.exists():
-        raise SystemExit(f"{TEST_DB} not found. Run scripts/phase1_prepare_data.py first.")
-    connection = sqlite3.connect(f"file:{TEST_DB}?mode=ro", uri=True)
+    records = read_jsonl(EVAL_RECORDS, args.limit)
 
     if args.self_test:
-        return self_test(records, connection)
+        with read_only_connection(TEST_DB) as connection:
+            return self_test(records, connection)
 
     print("=" * 72)
     print(f"Execution-match evaluation -- {args.name}")
@@ -244,10 +234,13 @@ def main() -> int:
         print(f"Generation finished in {elapsed}s")
 
     # ---------------------------------------------------------------- score
-    results = [
-        score_example(connection, record, output)
-        for record, output in zip(records, outputs)
-    ]
+    # Read-only connection, always closed: these queries are model-generated,
+    # so `mode=ro` is the defence that does not rely on a regex being complete.
+    with read_only_connection(TEST_DB) as connection:
+        results = [
+            score_example(connection, record, output)
+            for record, output in zip(records, outputs)
+        ]
     metrics = aggregate_metrics(results)
     metrics["by_condition_count"] = breakdown_by(results, records, "condition_count")
     metrics["by_agg_index"] = breakdown_by(results, records, "agg_index")

@@ -33,25 +33,19 @@ training run that did not produce them.
 from __future__ import annotations
 
 import argparse
-import json
 import math
 import sys
 from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from lora_text_to_sql.io import read_json as load_json  # noqa: E402
+from lora_text_to_sql.io import read_jsonl, write_json  # noqa: E402
+
 REPORTS = REPO_ROOT / "reports"
 PROCESSED = REPO_ROOT / "data" / "processed"
-
-
-def load_json(path: Path) -> Any:
-    if not path.exists():
-        raise SystemExit(f"{path} not found -- run the relevant phase first.")
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def read_jsonl(path: Path) -> list[dict[str, Any]]:
-    return [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
 # --------------------------------------------------------------------------
@@ -81,7 +75,12 @@ def mcnemar(before: list[dict], after: list[dict], key: str = "execution_match")
         chi_square = 0.0
         p_value = 1.0
     else:
-        chi_square = (abs(fixed - broken) - 1) ** 2 / discordant
+        # Yates continuity correction, clamped at zero. Without `max(0, ...)`
+        # a tie (fixed == broken) yields (0-1)^2 = 1 and a spurious
+        # chi-square of 1/discordant, overstating the evidence for a
+        # difference where the counts show none.
+        corrected = max(0.0, abs(fixed - broken) - 1)
+        chi_square = corrected**2 / discordant
         p_value = math.erfc(math.sqrt(chi_square) / math.sqrt(2))
     return {
         "fixed_by_finetuning": fixed,
@@ -404,9 +403,7 @@ def main() -> int:
         "examples": qualitative(before, after, args.examples),
     }
 
-    (REPORTS / "comparison.json").write_text(
-        json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    write_json(REPORTS / "comparison.json", report)
     markdown = render_markdown(report)
     (REPORTS / "comparison.md").write_text(markdown, encoding="utf-8")
 
