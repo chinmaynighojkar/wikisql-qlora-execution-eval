@@ -1,5 +1,10 @@
 # QLoRA Text-to-SQL
 
+**In plain terms:** this teaches a small AI model to turn a plain-English
+question into a working database query, then measures the improvement
+rigorously enough to survive a skeptical engineer's cross-examination —
+trained on a laptop, not a data-center cluster.
+
 QLoRA fine-tuning of **Qwen2.5-1.5B-Instruct** for natural-language-to-SQL,
 evaluated by **execution match** — generated SQL is run against real SQLite
 tables and its result set compared to ground truth, not scored on string
@@ -199,7 +204,7 @@ value position.
 "nothing", *any* query returning nothing scores as correct, including valid
 nonsense. These are excluded from the evaluation set.
 
-Full reasoning for all of these, and 24 other decisions, in
+Full reasoning for all of these, and 30 other decisions, in
 **[docs/DECISIONS.md](docs/DECISIONS.md)**.
 
 ---
@@ -285,7 +290,7 @@ Each phase had a verification gate; the next did not start until it passed.
 | 4 | Identical harness, before/after comparison | **PASS** — +45.6 pts, p < 1e-15 |
 | 5 | Write-up with real achieved numbers | This document |
 
-**139 tests** (`pytest`), with regression guards on the collation,
+**204 tests** (`pytest`), with regression guards on the collation,
 numeric-typing, extraction, result-comparison, prompt-parity and loss-trend
 decisions.
 
